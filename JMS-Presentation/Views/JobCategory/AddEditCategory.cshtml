@@ -1,0 +1,97 @@
+@using JMS_Presentation.ViewModels
+@model JobCategoryViewModel;
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Add Category";
+}
+
+<h2 class="page-title primaryText d-flex align-items-center gap-3"> @((Model.Id == Guid.Empty) ? "Add A New Category" :
+        "Edit Category")</h2>
+
+<div class="form-card p-2 p-sm-3 p-md-4">
+    <h4 class="form-section-title primaryText">Category Details</h4>
+
+    <form id="AddCategoryForm">
+
+        @if (Model.Id != Guid.Empty)
+        {
+            <input type="hidden" asp-for="Id">
+        }
+
+        <div class="row-cols-auto">
+            <div class="mb-4 col col-sm-10 col-lg-6">
+                <label for="categoryName" class="form-label">Category Name</label>
+                <div class="input-group">
+                    <input asp-for="Name" class="form-control" placeholder="Enter category name">
+                    <span class="input-group-text">
+                        <i class="fas fa-tag"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="Name" class="text-danger"></span>
+                <div class="form-text">
+                    <small class="text-muted">Choose a clear, descriptive name for this job category.</small>
+                </div>
+            </div>
+
+            <div class="mb-5 col col-sm-10 col-lg-6">
+                <label for="categoryDescription" class="form-label">Description</label>
+                <textarea asp-for="Description" class="form-control" placeholder="Describe this category"
+                    rows="5"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 flex-column flex-sm-row">
+            <button type="submit" class="btn primaryBtn addCategoryBtn">
+                @((Model.Id == Guid.Empty) ? "Create Category" : "Edit Category")
+            </button>
+            <button type="reset" class="btn secondaryBtn">
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+
+            $(document).on('submit', '#AddCategoryForm', function (e) {
+                e.preventDefault();
+
+                if (!$(this).validate()) {
+                    return;
+                }
+
+                var formData = new FormData(this);
+                var url = `@(Model.Id == Guid.Empty ? Url.Action("AddCategory", "JobCategory") : Url.Action("UpdateCategory", "JobCategory"))`;
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            });
+
+        });
+    </script>
+}

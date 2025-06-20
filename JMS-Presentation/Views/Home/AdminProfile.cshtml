@@ -1,0 +1,81 @@
+@using JMS_Presentation.ViewModels
+@model ProfileViewModel;
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Admin Profile";
+}
+
+<div class="main-content">
+    <h2 class="primaryText mb-4">Profile Information</h2>
+
+    <div class="profile-card">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="">
+                <i class="fas fa-user iconWithBg"></i>
+            </div>
+            <h4 class="primaryText">Admin Details</h4>
+        </div>
+
+        <form id="adminProfileForm">
+            <input asp-for="UserId" type="hidden">
+            <input asp-for="ResumeUrl" type="hidden" value="N/A">
+            <input asp-for="Email" type="hidden">
+
+            <div class="form-group col col-sm-10 col-lg-6">
+                <label class="form-label">First Name</label>
+                <input asp-for="FirstName" class="form-control">
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group col col-sm-10 col-lg-6">
+                <label class="form-label">Last Name</label>
+                <input asp-for="LastName" class="form-control">
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group col col-sm-10 col-lg-6">
+                <label class="form-label">Email</label>
+                <input asp-for="Email" disabled class="form-control" readonly>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn primaryBtn">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $(document).on('submit', '#adminProfileForm', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: '@Url.Action("UpdateProfile", "Home")',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

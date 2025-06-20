@@ -1,0 +1,65 @@
+@using DAL.Data.Enums
+@using JMS_Presentation.ViewModels
+@using System.Security.Claims
+@model JobPostingViewModel;
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Job Details";
+}
+
+<h2 class="primaryText">Job Information</h2>
+
+<div class="p-3 p-md-4 rounded-3 mt-3 jobTitle">
+    <i class="fas fa-briefcase iconWithBg" aria-hidden="true"></i>
+    <h3 class="primaryText">@Model.Title</h3>
+    <span class="secondaryText">@Model.Description</span>
+</div>
+
+<div class="job-card mt-3 rounded-3 p-3 p-md-4">
+    <div class="job-info-item">
+        <div class="job-info-label">Company</div>
+        <div class="job-info-value">
+            <a href="" class="company-link">@Model.CompanyName</a>
+        </div>
+    </div>
+
+    <div class="job-info-item">
+        <div class="job-info-label">Location</div>
+        <span class="primaryText">@Model.Location</span>
+    </div>
+
+    <div class="job-info-item">
+        <div class="job-info-label">Category</div>
+    </div>
+
+    <div class="job-info-item">
+        <div class="job-info-label">Employment Type</div>
+        <span class="primaryText">@(((EmploymentType)Model.EmploymentType).ToString())</span>
+    </div>
+
+    <div class="job-info-item">
+        <div class="job-info-label">Salary Range</div>
+        <div class="job-info-value">
+            <span class="primaryText">@Model.SalaryRange</span>
+        </div>
+    </div>
+
+    <div class="job-info-item">
+        <div class="job-info-label">Posted At</div>
+        <div class="primaryText">@Model.CreatedAt.ToString("MM-dd-yyyy")</div>
+    </div>
+
+    <div class="job-info-item">
+        <div class="job-info-label">Closing Date</div>
+        <div class="job-info-value">
+            <span class="closing-date">@Model.ClosingDate.ToString("MM-dd-yyyy")</span>
+        </div>
+    </div>
+@if (User.FindFirst(ClaimTypes.Role)?.Value != Role.Admin.ToString())
+{
+        <div class="mt-4">
+            <button class="btn btn-apply">Apply Now</button>
+        </div>
+}
+</div>

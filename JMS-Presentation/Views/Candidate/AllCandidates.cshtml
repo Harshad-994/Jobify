@@ -1,0 +1,201 @@
+@using JMS_Presentation.ViewModels
+@model List<CandidateProfileViewModel>;
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "All Candidates";
+}
+
+<h2 class="primaryText mb-3">All Registered Candidates</h2>
+<div class="mb-4">
+    <div class="position-relative d-flex justify-content-end">
+        <input class="form-control searchInput w-auto" type="text" id="searchCandidate" placeholder="Search" />
+        <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table" id="candidateTable">
+        <thead class="">
+            <tr>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Created At</th>
+                <th>Resume Link</th>
+                <th>Acive Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (CandidateProfileViewModel candidate in Model)
+            {
+                <tr data-id="@candidate.Id">
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-user iconWithBg"></i>
+                            <span>@candidate.FirstName @candidate.LastName</span>
+                        </div>
+                    </td>
+                    <td>
+                        @candidate.Email
+                    </td>
+                    <td>
+                        @candidate.CreatedAt.ToString("dd-MM-yyyy")
+                    </td>
+                    <td>
+                        <a href="@candidate.ResumeUrl" target="_blank">View Resume</a>
+                    </td>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input toggleCandidateActiveStatus" type="checkbox" role="switch"
+                                asp-for="@candidate.IsActive">
+                        </div>
+                    </td>
+                    <td>
+                        <a href="@Url.Action("CandidateDetails", "Candidate", new { candidateId = candidate.Id })"
+                            class="btn secondaryBtn">View Profile</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div class="" id="candidatePagination">
+    @await Html.PartialAsync("_Pagination")
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            var currentPage = 1;
+            var pageSize = $('#candidatePagination .pageSize').val() || 5;
+            var totalPages = 1;
+            var totalCount = 0;
+            var searchText = "";
+
+            function renderCandidates(renderMarkup = true) {
+                var filter = {
+                    page: currentPage,
+                    pageSize: pageSize,
+                    SearchText: searchText
+                };
+                $.ajax({
+                    url: '@Url.Action("GetAllCandidates", "Candidate")' + "?" + $.param(filter),
+                    type: 'GET',
+                    success: function (res) {
+                        totalCount = res?.totalCount;
+                        totalPages = res?.totalPages;
+                        currentPage = res?.page;
+                        updatePagination();
+                        if (!renderMarkup) {
+                            return;
+                        }
+                        var candidates = res?.items;
+                        var tableBody = $('#candidateTable tbody');
+                        tableBody.empty();
+                        candidates.forEach(candidate => {
+                            console.log(candidate)
+                            var row = `<tr data-id="${candidate.id}">
+                                                                                                                <td>
+                                                                                                                    <div class="d-flex align-items-center gap-2">
+                                                                                                                        <i class="fa-solid fa-user iconWithBg"></i>
+                                                                                                                        <span>${candidate.firstName} ${candidate.lastName}</span>
+                                                                                                                    </div>
+                                                                                                                </td>
+                                                                                                                <td>
+                                                                                                                    ${candidate.email}
+                                                                                                                </td>
+                                                                                                                <td>
+                                                                                                                    ${formatDateTimeToDate(candidate.createdAt)}
+                                                                                                                </td>
+                                                                                                                <td>
+                                                                                                                    <a href="${candidate.resumeUrl}" target="_blank">View Resume</a>
+                                                                                                                </td>
+                                                                                                                <td>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input toggleCandidateActiveStatus" type="checkbox" role="switch" ${candidate.isActive ? "checked" : ""}>
+                                                </div>
+                                            </td>
+                                                                                                                <td>
+                                                                                                                    <button class="btn secondaryBtn">View Profile</button>
+                                                                                                                </td>
+                                                                                                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            }
+
+            renderCandidates(false);
+
+            function updatePagination() {
+                $('#candidatePagination .pagination .stats').text(`Showing ${totalCount != 0 ? ((currentPage - 1) * pageSize) + 1 : 0}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`);
+                $('#candidatePagination .pageSize').val(pageSize);
+
+                // Enable/disable pagination buttons
+                $('#candidatePagination .prev-page').prop('disabled', currentPage === 1);
+                $('#candidatePagination .next-page').prop('disabled', currentPage === totalPages);
+            }
+
+            //to go on previous page
+            $('#candidatePagination .prev-page').click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderCandidates()
+                }
+            });
+
+            //to go on next page
+            $('#candidatePagination .next-page').click(function () {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderCandidates();
+                }
+            });
+
+            //changing the value of the pagesize on changing of the drop down
+            $(document).on('change', '#candidatePagination .pageSize', function () {
+                pageSize = $(this).val();
+                currentPage = 1;
+                renderCandidates();
+            });
+
+            //searching the candidate
+            $('#searchCandidate').on('input', debounce(function () {
+                searchText = $(this).val();
+                currentPage = 1;
+                renderCandidates();
+            }));
+
+            //for toggling candidate active status
+            $(document).on('click', '.toggleCandidateActiveStatus', function () {
+                var candidateId = $(this).closest('tr').data('id');
+                var isActive = $(this).prop('checked');
+                var params = {
+                    candidateId: candidateId,
+                }
+
+                $.ajax({
+                    url: '@Url.Action("ToggleCandidateActiveStatus", "Candidate")' + "?" + $.param(params),
+                    type: 'POST',
+                    success: function (res) {
+                        if (res?.success) {
+                            successToast(res?.message);
+                            renderCandidates();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            });
+
+        });
+    </script>
+}

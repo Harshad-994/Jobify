@@ -1,0 +1,68 @@
+@using JMS_Presentation.ViewModels
+@model LoginViewModel;
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="authPage">
+    <div class="authCard">
+        <div class="logoHeader">
+            <h1>Jobify</h1>
+            <p>Your career journey starts here</p>
+        </div>
+
+        <div class="authTabs">
+            <a class="authTab active text-decoration-none" href="@Url.Action("Login", "Account")">Login</a>
+            <a class="authTab text-decoration-none" href="@Url.Action("Register", "Account")">Register</a>
+        </div>
+
+        <div id="login-form" class="form-content active">
+            <form method="post" asp-action="Login">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <input asp-for="RememberMe" type="checkbox" class="" id="remember" />
+                    <label class="form-check-label" for="remember">Remember me</label>
+                </div>
+
+                <button class="signInButton">Sign In</button>
+
+                <div class="forgot-password">
+                    <a href="#">Forgot your password?</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+
+        if (Boolean(`@TempData["FromLogout"]`.toString())) {
+            successToast("You have successfully logged out.");
+        }
+
+        function switchTab(tab) {
+            $(".authTab").removeClass("active");
+            $(".form-content").removeClass("active");
+
+            $(event.target).addClass("active");
+
+            $("#" + tab + "-form").addClass("active");
+        }
+    </script>
+}

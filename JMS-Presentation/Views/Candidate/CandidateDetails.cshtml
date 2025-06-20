@@ -1,0 +1,211 @@
+@using JMS_Presentation.ViewModels
+@model CandidateProfileViewModel;
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Candidate Details";
+}
+
+<div class="main-content">
+    <h2 class="primaryText mb-4">Profile Information</h2>
+
+    <div class="profile-card">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="">
+                <i class="fas fa-user iconWithBg"></i>
+            </div>
+            <h3 class="primaryText">Candidate Details</h3>
+        </div>
+
+        <form>
+            <div class="form-group col col-sm-10 col-lg-6">
+                <label class="form-label">First Name</label>
+                <input asp-for="FirstName" class="form-control" disabled readonly>
+            </div>
+
+            <div class="form-group col col-sm-10 col-lg-6">
+                <label class="form-label">Last Name</label>
+                <input asp-for="LastName" class="form-control" disabled readonly>
+            </div>
+
+            <div class="form-group col col-sm-10 col-lg-6">
+                <label class="form-label">Email</label>
+                <input asp-for="Email" disabled class="form-control" readonly>
+            </div>
+        </form>
+    </div>
+    <div class="col col-sm-10 col-lg-6">
+        <h3 class="primaryText mb-1">Candidate's Applications</h3>
+        <div class="position-relative d-flex justify-content-end mb-3">
+            <input class="form-control searchInput w-auto" type="text" id="searchCandidateApplication" placeholder="Search" />
+            <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
+        </div>
+        <div class="table-responsive">
+            <table class="table" id="candidateApplicationTable">
+                <thead class="">
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Status</th>
+                        <th>Applied At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (JobApplicationViewModel application in Model.JobApplications)
+                    {
+                        <tr data-id="@application.Id" data-statusId="@application.ApplicationStatus">
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-file-alt"></i>
+                                    @application.Title
+                                </div>
+                            </td>
+                            <td>
+                                @application.JobApplicationStatusName
+                            </td>
+                            <td>
+                                @application.AppliedAt.ToString("dd/MM/yyyy")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="" id="candidateApplicationPagination">
+            @await Html.PartialAsync("_Pagination")
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            var currentPage = 1;
+            var pageSize = $('#candidateApplicationPagination .pageSize').val() || 5;
+            var totalPages = 1;
+            var totalCount = 0;
+            var searchText = "";
+            var applicationStatus = null;
+
+            function renderApplications(renderMarkup = true) {
+                var filter = {
+                    page: currentPage,
+                    pageSize: pageSize,
+                    SearchText: searchText,
+                    ApplicationStatus: applicationStatus
+                };
+                $.ajax({
+                    url: '@Url.Action("GetAllJobApplications", "JobApplication")' + "?" + $.param(filter),
+                    type: 'GET',
+                    success: function (res) {
+                        totalCount = res?.totalCount;
+                        totalPages = res?.totalPages;
+                        currentPage = res?.page;
+                        updatePagination();
+                        if (!renderMarkup) {
+                            return;
+                        }
+                        var applications = res?.items;
+                        var tableBody = $('#candidateApplicationTable tbody');
+                        tableBody.empty();
+                        applications.forEach(application => {
+                            var row = `<tr data-id="${application.id}" data-statusId="${application.applicationStatus}">
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="fas fa-file-alt"></i>
+                                                        ${application.title}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    ${application.jobApplicationStatusName}
+                                                </td>
+                                                <td>
+                                                    ${formatDateTimeToDate(application.appliedAt)}
+                                                </td>
+                                            </tr>`;
+                            tableBody.append(row);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            }
+
+            renderApplications(false);
+
+            $(document).on('click', '.deleteApplicationBtn', function () {
+                var applicationId = $(this).closest('tr').data('id');
+                $("#deleteApplicationModal .confirmDelete").attr('applicationId', applicationId);
+            });
+
+            $(document).on('click', '#deleteApplicationModal .confirmDelete', function () {
+                var applicationId = $(this).attr('applicationId');
+                $.ajax({
+                    url: '@Url.Action("DeleteApplication", "JobApplication")',
+                    type: 'POST',
+                    data: { applicationId: applicationId },
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                            if ($("#candidateApplicationTable tbody").find("tr").length == 1 && currentPage > 1) {
+                                currentPage--;
+                            }
+                            renderApplications();
+                            $("#deleteApplicationModal").modal("hide");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            });
+
+            function updatePagination() {
+                $('#candidateApplicationPagination .pagination .stats').text(`Showing ${totalCount != 0 ? ((currentPage - 1) * pageSize) + 1 : 0}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`);
+                $('#candidateApplicationPagination .pageSize').val(pageSize);
+
+                // Enable/disable pagination buttons
+                $('#candidateApplicationPagination .prev-page').prop('disabled', currentPage === 1);
+                $('#candidateApplicationPagination .next-page').prop('disabled', currentPage === totalPages);
+            }
+
+            //to go on previous page
+            $('#candidateApplicationPagination .prev-page').click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderApplications()
+                }
+            });
+
+            //to go on next page
+            $('#candidateApplicationPagination .next-page').click(function () {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderApplications();
+                }
+            });
+
+            //changing the value of the pagesize on changing of the drop down
+            $(document).on('change', '#candidateApplicationPagination .pageSize', function () {
+                pageSize = $(this).val();
+                currentPage = 1;
+                renderApplications();
+            });
+
+            //searching the application
+            $('#searchCandidateApplication').on('input', debounce(function () {
+                searchText = $(this).val();
+                currentPage = 1;
+                renderApplications();
+            }));
+
+        });
+    </script>
+}

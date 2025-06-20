@@ -1,0 +1,79 @@
+@using JMS_Presentation.ViewModels
+@model RegisterViewModel;
+
+@{
+    ViewData["Title"] = "";
+}
+
+<div class="authPage">
+    <div class="authCard">
+        <div class="logoHeader">
+            <h1>Jobify</h1>
+            <p>Your career journey starts here</p>
+        </div>
+
+        <div class="authTabs">
+            <a class="authTab text-decoration-none" href="@Url.Action("Login", "Account")">Login</a>
+            <a class="authTab active text-decoration-none" href="@Url.Action("Register", "Account")">Register</a>
+        </div>
+
+        <div id="register-form" class="form-content active">
+            <form asp-action="Register" method="post">
+                <div class="row">
+                    <div class="form-group">
+                        <label class="form-label">First Name</label>
+                        <input asp-for="FirstName" type="text" class="form-control" placeholder="First name" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name</label>
+                        <input asp-for="LastName" type="text" class="form-control" placeholder="Last name" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="Enter your email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Create a password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control"
+                        placeholder="Confirm your password" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <input required type="checkbox" class="" id="terms" />
+                    <label class="" for="terms">I agree to the Terms and conditions.</label>
+                </div>
+
+                <button type="submit" class="signInButton">Create Account</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        function switchTab(tab) {
+            $(".authTab").removeClass("active");
+            $(".form-content").removeClass("active");
+
+            $(event.target).addClass("active");
+
+            $("#" + tab + "-form").addClass("active");
+        }
+    </script>
+}

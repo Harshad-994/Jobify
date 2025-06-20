@@ -1,0 +1,128 @@
+@using DAL.Data.Enums
+@using JMS_Presentation.ViewModels
+@model JobPostingViewModel;
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Add Job Posting";
+}
+
+<h2 class="page-title primaryText d-flex align-items-center gap-3"> @((Model.Id == Guid.Empty) ? "Add A New Job Posting" :
+        "Edit Job Posting")</h2>
+
+<div class="form-card p-2 p-sm-3 p-md-4">
+    <h4 class="form-section-title primaryText">Job Posting Details</h4>
+
+<form id="addJobPostingForm">
+    @if (Model.Id != Guid.Empty)
+        {
+            <input type="hidden" asp-for="Id">
+        }
+    <div class="row-cols-auto">
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Title</label>
+                    <input asp-for="Title" class="form-control" placeholder="Enter Job Title">
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+            <label for="" class="form-label">Description</label>
+                    <textarea asp-for="Description" class="form-control" placeholder="Describe job role,work and expectations" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Company</label>
+                    <input asp-for="CompanyName" class="form-control" placeholder="Enter company name">
+                <span asp-validation-for="CompanyName" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Location</label>
+                    <input asp-for="Location" class="form-control" placeholder="Enter Location">
+                <span asp-validation-for="Location" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Category</label>
+                <select class="form-select" asp-for="CategoryId" asp-items="ViewBag.Categories">
+                    <option selected disabled>Select Category</option>
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Employment Type</label>
+                <select class="form-select" asp-for="EmploymentType" asp-items="@Html.GetEnumSelectList<EmploymentType>()">
+                    <option selected disabled>Select Employment Type</option>
+                </select>
+                <span asp-validation-for="EmploymentType" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Salary Range</label>
+                    <input asp-for="SalaryRange" class="form-control" placeholder="e.g. $50,000 - $60,000">
+                <span asp-validation-for="SalaryRange" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Closing Date</label>
+                    <input asp-for="ClosingDate" class="form-control" placeholder="select closing date" type="date" value="@Model.ClosingDate.ToString("yyyy-MM-dd")">
+                <span asp-validation-for="ClosingDate" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3 col col-sm-10 col-lg-6">
+                <label for="" class="form-label">Job Status</label>
+                <div class="form-check form-switch"> 
+                <input class="form-check-input" type="checkbox" role="switch" asp-for="IsActive" checked>
+                </div>
+                <span asp-validation-for="IsActive" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 flex-column flex-sm-row">
+            <button type="submit" class="btn primaryBtn addCategoryBtn">
+                @((Model.Id == Guid.Empty) ? "Create Job" : "Edit Job")
+            </button>
+            <button type="reset" class="btn secondaryBtn">
+                Cancel
+            </button>
+        </div>
+</form>
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        $(document).ready(function () {
+            $(document).on('submit', '#addJobPostingForm', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: `@(Model.Id == Guid.Empty ? Url.Action("AddJobPosting", "JobPosting") : Url.Action("EditJobPosting", "JobPosting"))`,
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                })
+            });
+        });
+    </script>
+
+}

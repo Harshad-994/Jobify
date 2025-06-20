@@ -1,0 +1,145 @@
+@using JMS_Presentation.ViewModels
+@model AdminDashboardViewModel;
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2 class="section-title">Overview</h2>
+
+<div class="row mb-5">
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                <div class="metric-icon mb-3">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h6 class="text-muted mb-2">Categories</h6>
+                <h5 class="fw-bold mb-3">Manage Categories</h5>
+                <p class="text-muted small mb-4">Create, edit, or remove job categories.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a class="btn primaryBtn" href="@Url.Action("AddCategory", "JobCategory")">Add Category</a>
+                    <a class="btn secondaryBtn" href="@Url.Action("AllCategories", "JobCategory")">View All</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class=" col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                <div class="metric-icon mb-3">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <h6 class="text-muted mb-2">Jobs</h6>
+                <h5 class="fw-bold mb-3">Manage Jobs</h5>
+                <p class="text-muted small mb-4">Post new jobs or update existing listings.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a class="btn primaryBtn" href="@Url.Action("AddJobPosting", "JobPosting")">Add Job</a>
+                    <a class="btn secondaryBtn" href="@Url.Action("AllJobPostings", "JobPosting")">View All</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class=" col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                <div class="metric-icon mb-3">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h6 class="text-muted mb-2">Applications</h6>
+                <h5 class="fw-bold mb-3">View Applications</h5>
+                <p class="text-muted small mb-4">Monitor and review candidate submissions.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a class="btn primaryBtn" href="@Url.Action("AllJobApplications", "JobApplication")">See
+                        Applications</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class=" section-title">Site Metrics</h4>
+<div class="row mb-5">
+    <div class="col-lg-4 mb-3">
+        <div class="card">
+            <div class="card-body metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <h6 class="text-muted mb-2">Jobs Posted</h6>
+                <div class="metric-number">@Model.TotalNoOfJobs</div>
+                <div class="metric-label">Total jobs posted</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-3">
+        <div class="card">
+            <div class="card-body metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h6 class="text-muted mb-2">Candidates</h6>
+                <div class="metric-number">@Model.TotalNoOfCandidates</div>
+                <div class="metric-label">Total candidates registered</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-3">
+        <div class="card">
+            <div class="card-body metric-card">
+                <div class="metric-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h6 class="text-muted mb-2">Applications</h6>
+                <div class="metric-number">@Model.TotalNoOfApplications</div>
+                <div class="metric-label">Total applications received</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="section-title">Recent Job Postings</h4>
+<div class="card recentJobPostings">
+    <div class="card-body">
+        @foreach (var job in Model.RecentJobPostings)
+        {
+            <div class="job-row d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                <div class="d-flex align-items-center flex-grow-1 mb-2 mb-md-0">
+                    <i class="fas fa-briefcase me-3"></i>
+                    <div>
+                        <h6 class="mb-1 fw-semibold">@job.Title</h6>
+                        <small class="text-muted">@job.CategoryName</small>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-3 justify-content-between">
+                    <span class="noOfApplications fw-semibold">@job.TotalNoOfApplications
+                        Applications</span>
+                    <div class="d-flex gap-4 p-1 actions">
+                        <a href="@Url.Action("EditJobPosting", "JobPosting", new { jobId = job.Id })"><i
+                                class="fa-solid fa-pen fs-6"></i></a>
+                        <a href="@Url.Action("JobPostingDetails", "JobPosting", new { jobId = job.Id })"><i
+                                class="fa-solid fa-circle-info fs-5"></i></a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+
+            document.title = document.title + " - " + `@ViewData["Title"]`;
+
+            if (Boolean(`@TempData["FromLogin"]`.toString())) {
+                successToast("You have successfully logged in.");
+            }
+
+        });
+    </script>
+}

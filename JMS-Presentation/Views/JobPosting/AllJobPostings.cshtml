@@ -1,0 +1,212 @@
+@using JMS_Presentation.ViewModels
+@model List<JobPostingViewModel>;
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Job Postings";
+}
+
+@* modal for deleteing a job posting*@
+<div class="modal fade" id="deleteJobPostingModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete job posting</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this job?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondaryBtn" data-bs-dismiss="modal">No</button>
+                <button type="button" class="btn primaryBtn confirmDelete">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-body">
+    <h2 class="primaryText mb-2">All Job Postings</h2>
+    <div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+        <div class="position-relative">
+            <input class="form-control searchInput" type="text" id="searchCategory" placeholder="Search" />
+            <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
+        </div>
+        <a class="btn primaryBtn" href="@Url.Action("AddJobPosting", "JobPosting")">
+            <i class=" fas fa-plus me-2"></i>
+            Add Job
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table" id="jobPostingTable">
+            <thead class="">
+                <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Location</th>
+                    <th>Category</th>
+                    <th>Closing Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (JobPostingViewModel job in Model)
+                {
+                    <tr data-id="@job.Id">
+                        <td>
+                            <div class="category-name d-flex align-items-center gap-2">
+                                <i class="fas fa-briefcase" aria-hidden="true"></i>
+                                @job.Title
+                            </div>
+                        </td>
+                        <td>
+                            @job.CompanyName
+                        </td>
+                        <td>
+                            @job.Location
+                        </td>
+                        <td>
+                            @job.CategoryName
+                        </td>
+                        <td>
+                            @job.ClosingDate
+                        </td>
+                        <td>
+                            <div class="d-flex gap-4 p-1 actions">
+                                <a href="@Url.Action("EditJobPosting", "JobPosting", new { jobId = job.Id })"><i
+                                        class="fa-solid fa-pen"></i></a>
+                                <i class="fas fa-trash deleteJobPostingBtn" data-bs-toggle="modal"
+                                    data-bs-target="#deleteJobPostingModal"></i>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="" id="jobPostingPagination">
+        @await Html.PartialAsync("_Pagination")
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            var currentPage = 1;
+            var pageSize = $('#jobPostingPagination .pageSize').val() || 5;
+            var totalPages = 1;
+            var totalCount = 0;
+            var searchText = "";
+
+            function renderJobPostings(renderMarkup = true) {
+                var filter = {
+                    page: currentPage,
+                    pageSize: pageSize,
+                    SearchText: searchText
+                };
+                $.ajax({
+                    url: '@Url.Action("GetAllJobPostings", "JobPosting")' + "?" + $.param(filter),
+                    type: 'GET',
+                    success: function (res) {
+                        totalCount = res?.totalCount;
+                        totalPages = res?.totalPages;
+                        currentPage = res?.page;
+                        updatePagination();
+                        if (!renderMarkup) {
+                            return;
+                        }
+                        var jobs = res?.items;
+                        var tableBody = $('#jobPostingTable tbody');
+                        tableBody.empty();
+                        jobs.forEach(job => {
+                            var row = `<tr data-id="${job.id}"><td><div class="category-name d-flex align-items-center gap-2"><i class="fas fa-briefcasearia-hidden="true"><i>${job.title}</div></td><td>${job.companyName}</td><td>${job.location}</td><td>${job.categoryName}</td><td>${job.closingDate}</td><td><div class="d-flex gap-4 p-1 actions"><a href="${`/JobPosting/EditJobPosting?jobId=${job.id}`}"><i class="fa-solid fa-pen"></i></a><i class="fas fa-trash deleteJobPostingBtn" data-bs-toggle="modal" data-bs-target="#deleteJobPostingModal"></i></div></td></tr>`;
+                            tableBody.append(row);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            }
+
+            renderJobPostings(false);
+
+            $(document).on('click', '.deleteJobPostingBtn', function (e) {
+                e.stopPropagation();
+                var jobId = $(this).closest('tr').data('id');
+                $("#deleteJobPostingModal .confirmDelete").attr('jobId', jobId);
+            });
+
+            $(document).on('click', '#deleteJobPostingModal .confirmDelete', function () {
+                var jobId = $(this).attr('jobId');
+                $.ajax({
+                    url: '@Url.Action("DeleteJobPosting", "JobPosting")',
+                    type: 'POST',
+                    data: { jobId: jobId },
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                            if ($("#jobPostingTable tbody").find("tr").length == 1 && currentPage > 1) {
+                                currentPage--;
+                            }
+                            renderJobPostings();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+                $("#deleteJobPostingModal").modal("hide");
+            });
+
+            function updatePagination() {
+                $('#jobPostingPagination .pagination .stats').text(`Showing ${totalCount != 0 ? ((currentPage - 1) * pageSize) + 1 : 0}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`);
+                $('#jobPostingPagination .pageSize').val(pageSize);
+
+                // Enable/disable pagination buttons
+                $('#jobPostingPagination .prev-page').prop('disabled', currentPage === 1);
+                $('#jobPostingPagination .next-page').prop('disabled', currentPage === totalPages);
+            }
+
+            //to go on previous page
+            $('#jobPostingPagination .prev-page').click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderJobPostings()
+                }
+            });
+
+            //to go on next page
+            $('#jobPostingPagination .next-page').click(function () {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderJobPostings();
+                }
+            });
+
+            //changing the value of the pagesize on changing of the drop down
+            $(document).on('change', '#jobPostingPagination .pageSize', function () {
+                pageSize = $(this).val();
+                currentPage = 1;
+                renderJobPostings();
+            });
+
+            //searching the category
+            $('#searchCategory').on('input', debounce(function () {
+                searchText = $(this).val();
+                currentPage = 1;
+                renderJobPostings();
+            }));
+
+            //getting detail of job posting
+            $(document).on('click', '#jobPostingTable tbody tr', function () {
+                var jobId = $(this).data('id');
+                window.location.href = `/JobPosting/JobPostingDetails?jobId=${jobId}`;
+            });
+
+        });
+    </script>
+}
