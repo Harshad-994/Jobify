@@ -7,6 +7,7 @@ public class JobApplicationViewModel
     public string? Title { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public string? CompanyName { get; set; }
     public Guid JobPostingId { get; set; }
     public string? CoverLetter { get; set; }
     public string? ResumeUrl { get; set; }

@@ -3,5 +3,6 @@ namespace BLL.Interfaces;
 public interface IPasswordEncryptionService
 {
     Task<string> EncryptAsync(string clearText);
-    string HashPassword(byte[] password);
+    public string HashPassword(string password);
+    Task<string> DecryptAsync(string encryptedText);
 }

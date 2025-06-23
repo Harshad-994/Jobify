@@ -1,8 +1,9 @@
+@using DAL.Data.Enums
 @using JMS_Presentation.ViewModels
-@model AdminProfileViewModel;
+@model CandidateProfileViewModel;
 @{
-    Layout = "_AdminLayout";
-    ViewData["Title"] = "Admin Profile";
+    Layout = "_CandidateLayout";
+    ViewData["Title"] = "Candidate Profile";
 }
 
 <div class="main-content">
@@ -13,11 +14,12 @@
             <div class="">
                 <i class="fas fa-user iconWithBg"></i>
             </div>
-            <h4 class="primaryText">Admin Details</h4>
+            <h4 class="primaryText">Candidate Details</h4>
         </div>
 
-        <form id="adminProfileForm">
+        <form id="candidateProfileForm">
             <input asp-for="Id" type="hidden">
+            <input asp-for="ResumeUrl" type="hidden">
             <input asp-for="Email" type="hidden">
 
             <div class="form-group col col-sm-10 col-lg-6">
@@ -38,6 +40,18 @@
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
+            <div class="form-group col col-sm-10 col-lg-6 mt-3">
+                <input asp-for="Resume" hidden type="file" id="resumeInput">
+                <label class="form-label fs-5">Resume</label>
+                <div>
+                    @if (!string.IsNullOrEmpty(Model.ResumeUrl))
+                    {
+                        <a href="@Model.ResumeUrl" target="_blank" class="btn secondaryBtn">View Your Resume</a>
+                    }
+                    <label class="btn secondaryBtn" for="resumeInput">@(!string.IsNullOrEmpty(Model.ResumeUrl) ?"Replace Resume" : "Upload Resume")</label>
+                </div>
+            </div>
+
             <button type="submit" class="btn primaryBtn">Save Changes</button>
             <button type="reset" class="btn secondaryBtn">Cancel</button>
         </form>
@@ -52,11 +66,11 @@
 
     <script>
         $(document).ready(function () {
-            $(document).on('submit', '#adminProfileForm', function (e) {
+            $(document).on('submit', '#candidateProfileForm', function (e) {
                 e.preventDefault();
                 var formData = new FormData(this);
                 $.ajax({
-                    url: '@Url.Action("UpdateAdminProfile", "Home")',
+                    url: '@Url.Action("UpdateCandidateProfile", "Home")',
                     type: 'POST',
                     data: formData,
                     contentType: false,
@@ -76,6 +90,7 @@
                     }
                 });
             });
+
         });
     </script>
 }

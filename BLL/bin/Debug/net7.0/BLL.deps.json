@@ -2204,6 +2204,9 @@
         }
       },
       "Shared/1.0.0": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Http": "2.3.0"
+        },
         "runtime": {
           "Shared.dll": {}
         }

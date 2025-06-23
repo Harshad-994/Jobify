@@ -9,3 +9,4 @@ D:\Job-Management-System\Shared\obj\Debug\net7.0\Shared.dll
 D:\Job-Management-System\Shared\obj\Debug\net7.0\refint\Shared.dll
 D:\Job-Management-System\Shared\obj\Debug\net7.0\Shared.pdb
 D:\Job-Management-System\Shared\obj\Debug\net7.0\ref\Shared.dll
+D:\Job-Management-System\Shared\obj\Debug\net7.0\Shared.csproj.AssemblyReference.cache

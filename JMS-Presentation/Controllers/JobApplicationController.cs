@@ -30,7 +30,8 @@ public class JobApplicationController : Controller
             AppliedAt = jobApplication.AppliedAt,
             UpdatedAt = jobApplication.UpdatedAt,
             ApplicationStatus = jobApplication.ApplicationStatus,
-            JobApplicationStatusName = jobApplication.JobApplicationStatusName
+            JobApplicationStatusName = jobApplication.JobApplicationStatusName,
+            CompanyName = jobApplication.CompanyName
         }).ToList();
         return View("AllJobApplications", jobApplications);
     }
@@ -51,7 +52,8 @@ public class JobApplicationController : Controller
             AppliedAt = jobApplication.AppliedAt,
             UpdatedAt = jobApplication.UpdatedAt,
             ApplicationStatus = jobApplication.ApplicationStatus,
-            JobApplicationStatusName = jobApplication.JobApplicationStatusName
+            JobApplicationStatusName = jobApplication.JobApplicationStatusName,
+            CompanyName = jobApplication.CompanyName
         }).ToList();
         var paginationResponse = new PaginationResponseDto<JobApplicationViewModel>
         {
@@ -92,8 +94,43 @@ public class JobApplicationController : Controller
             AppliedAt = jobApplication.AppliedAt,
             UpdatedAt = jobApplication.UpdatedAt,
             ApplicationStatus = jobApplication.ApplicationStatus,
-            ResumeUrl = jobApplication.ResumeUrl
+            ResumeUrl = jobApplication.ResumeUrl,
+            CompanyName = jobApplication.CompanyName
         };
         return jobApplicationViewModel;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AllJobApplicationsForCandidate()
+    {
+        var userIdClaim = User.FindFirst("UserId")?.Value;
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId))
+        {
+            return RedirectToAction("Login");
+        }
+
+        if (Guid.Empty == userId)
+        {
+            return RedirectToAction("Login");
+        }
+
+        var jobApplicationsDto = await _jobApplicationService.GetAllApplicationsOfCandidateAsync(userId);
+        
+        var jobApplications = jobApplicationsDto.Select(jobApplication => new JobApplicationViewModel
+        {
+            Id = jobApplication.Id,
+            UserId = jobApplication.UserId,
+            Title = jobApplication.Title,
+            FirstName = jobApplication.FirstName,
+            LastName = jobApplication.LastName,
+            JobPostingId = jobApplication.JobPostingId,
+            CoverLetter = jobApplication.CoverLetter,
+            AppliedAt = jobApplication.AppliedAt,
+            UpdatedAt = jobApplication.UpdatedAt,
+            ApplicationStatus = jobApplication.ApplicationStatus,
+            JobApplicationStatusName = jobApplication.JobApplicationStatusName,
+            CompanyName = jobApplication.CompanyName
+        }).ToList();
+        return View("AllJobApplicationsForCandidate", jobApplications);
     }
 }

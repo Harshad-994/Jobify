@@ -9,8 +9,12 @@
       "PackagePath": "staticwebassets\\css\\pages\\AddCategory.css"
     },
     {
-      "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\AdminDashboard.css",
-      "PackagePath": "staticwebassets\\css\\pages\\AdminDashboard.css"
+      "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\CandidateDetails.css",
+      "PackagePath": "staticwebassets\\css\\pages\\CandidateDetails.css"
+    },
+    {
+      "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\Dashboard.css",
+      "PackagePath": "staticwebassets\\css\\pages\\Dashboard.css"
     },
     {
       "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\JobDetails.css",
@@ -31,6 +35,10 @@
     {
       "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\favicon.ico",
       "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
+      "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\js\\pages\\dashboard.js",
+      "PackagePath": "staticwebassets\\js\\pages\\dashboard.js"
     },
     {
       "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\js\\site.js",

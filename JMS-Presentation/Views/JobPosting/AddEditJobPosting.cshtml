@@ -67,7 +67,12 @@
 
             <div class="mb-3 col col-sm-10 col-lg-6">
                 <label for="" class="form-label">Closing Date</label>
-                    <input asp-for="ClosingDate" class="form-control" placeholder="select closing date" type="date" value="@Model.ClosingDate.ToString("yyyy-MM-dd")">
+                @if(Model.Id == Guid.Empty){
+                    <input min="@DateTime.UtcNow.Date.ToString("yyyy-MM-dd")" asp-for="ClosingDate" class="form-control" placeholder="select closing date" type="date">
+                }
+                else{
+                    <input min="@DateTime.UtcNow.Date.ToString("yyyy-MM-dd")" asp-for="ClosingDate" class="form-control" placeholder="select closing date" type="date" value="@Model.ClosingDate.ToString("yyyy-MM-dd")">
+                }
                 <span asp-validation-for="ClosingDate" class="text-danger"></span>
             </div>
 

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "zD6IRlxCCDeJpDFNeSOQrgajWsNo3Z13fWfAMhDjuD8=",
+  "Hash": "+wrZZWZsNwQooIv37bEaLM/JmLLrC5R/xKk48Bs0ByA=",
   "Source": "JMS-Presentation",
   "BasePath": "_content/JMS-Presentation",
   "Mode": "Default",
@@ -68,12 +68,12 @@
       "OriginalItemSpec": "wwwroot\\css\\pages\\AddCategory.css"
     },
     {
-      "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\AdminDashboard.css",
+      "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\CandidateDetails.css",
       "SourceId": "JMS-Presentation",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\",
       "BasePath": "_content/JMS-Presentation",
-      "RelativePath": "css/pages/AdminDashboard.css",
+      "RelativePath": "css/pages/CandidateDetails.css",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Primary",
@@ -82,7 +82,24 @@
       "AssetTraitValue": "",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot\\css\\pages\\AdminDashboard.css"
+      "OriginalItemSpec": "wwwroot\\css\\pages\\CandidateDetails.css"
+    },
+    {
+      "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\Dashboard.css",
+      "SourceId": "JMS-Presentation",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\",
+      "BasePath": "_content/JMS-Presentation",
+      "RelativePath": "css/pages/Dashboard.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\pages\\Dashboard.css"
     },
     {
       "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\css\\pages\\JobDetails.css",
@@ -168,6 +185,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\favicon.ico"
+    },
+    {
+      "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\js\\pages\\dashboard.js",
+      "SourceId": "JMS-Presentation",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\",
+      "BasePath": "_content/JMS-Presentation",
+      "RelativePath": "js/pages/dashboard.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\pages\\dashboard.js"
     },
     {
       "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\js\\site.js",

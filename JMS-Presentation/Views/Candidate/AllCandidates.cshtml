@@ -22,11 +22,18 @@
                 <th>Email</th>
                 <th>Created At</th>
                 <th>Resume Link</th>
-                <th>Acive Status</th>
+                <th>Active Status</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="primaryText text-center">No job users found.</td>
+                </tr>
+            }
+
             @foreach (CandidateProfileViewModel candidate in Model)
             {
                 <tr data-id="@candidate.Id">
@@ -52,17 +59,22 @@
                         </div>
                     </td>
                     <td>
+
                         <a href="@Url.Action("CandidateDetails", "Candidate", new { candidateId = candidate.Id })"
-                            class="btn secondaryBtn">View Profile</a>
+                            class="fs-4"><i class="fa-regular fa-address-card ps-2"></i></a>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
-<div class="" id="candidatePagination">
-    @await Html.PartialAsync("_Pagination")
-</div>
+@if (Model.Count > 0)
+{
+    <div class="" id="candidatePagination">
+        @await Html.PartialAsync("_Pagination")
+    </div>
+
+}
 
 @section Scripts {
     <script>
@@ -94,33 +106,40 @@
                         var candidates = res?.items;
                         var tableBody = $('#candidateTable tbody');
                         tableBody.empty();
+                        if (totalCount == 0) {
+                            tableBody.append(`<tr><td colspan="6" class="primaryText text-center">No users found.</td></tr>`);
+                            $(".pagination").addClass("d-none");
+                        }
+                        else {
+                            $(".pagination").removeClass("d-none");
+                        }
                         candidates.forEach(candidate => {
                             console.log(candidate)
                             var row = `<tr data-id="${candidate.id}">
-                                                                                                                <td>
-                                                                                                                    <div class="d-flex align-items-center gap-2">
-                                                                                                                        <i class="fa-solid fa-user iconWithBg"></i>
-                                                                                                                        <span>${candidate.firstName} ${candidate.lastName}</span>
-                                                                                                                    </div>
-                                                                                                                </td>
-                                                                                                                <td>
-                                                                                                                    ${candidate.email}
-                                                                                                                </td>
-                                                                                                                <td>
-                                                                                                                    ${formatDateTimeToDate(candidate.createdAt)}
-                                                                                                                </td>
-                                                                                                                <td>
-                                                                                                                    <a href="${candidate.resumeUrl}" target="_blank">View Resume</a>
-                                                                                                                </td>
-                                                                                                                <td>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input toggleCandidateActiveStatus" type="checkbox" role="switch" ${candidate.isActive ? "checked" : ""}>
-                                                </div>
-                                            </td>
-                                                                                                                <td>
-                                                                                                                    <button class="btn secondaryBtn">View Profile</button>
-                                                                                                                </td>
-                                                                                                            </tr>`;
+                                                                                                                                                                    <td>
+                                                                                                                                                                        <div class="d-flex align-items-center gap-2">
+                                                                                                                                                                            <i class="fa-solid fa-user iconWithBg"></i>
+                                                                                                                                                                            <span>${candidate.firstName} ${candidate.lastName}</span>
+                                                                                                                                                                        </div>
+                                                                                                                                                                    </td>
+                                                                                                                                                                    <td>
+                                                                                                                                                                        ${candidate.email}
+                                                                                                                                                                    </td>
+                                                                                                                                                                    <td>
+                                                                                                                                                                        ${formatDateTimeToDate(candidate.createdAt)}
+                                                                                                                                                                    </td>
+                                                                                                                                                                    <td>
+                                                                                                                                                                        <a href="${candidate.resumeUrl}" target="_blank">View Resume</a>
+                                                                                                                                                                    </td>
+                                                                                                                                                                    <td>
+                                                                                                    <div class="form-check form-switch">
+                                                                                                        <input class="form-check-input toggleCandidateActiveStatus" type="checkbox" role="switch" ${candidate.isActive ? "checked" : ""}>
+                                                                                                    </div>
+                                                                                                </td>
+                                                                                                                                                                    <td>
+<a class="fs-4" href=${"/Candidate/CandidateDetails?candidateId="+candidate.id}><i class="fa-regular fa-address-card ps-2"></i></a>
+                                                                                                                                                                    </td>
+                                                                                                                                                                </tr>`;
                             tableBody.append(row);
                         });
                     },

@@ -1,0 +1,15 @@
+.profileStatus span:nth-child(1) {
+  display: inline-block;
+  width: 1rem;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+}
+.profileStatus.activeStatus span:nth-child(1) {
+  background-color: var(--success);
+}
+.profileStatus.notActiveStatus span:nth-child(1) {
+  background-color: var(--error);
+}
+.profileStatus span:nth-child(2) {
+  font-weight: 500;
+}

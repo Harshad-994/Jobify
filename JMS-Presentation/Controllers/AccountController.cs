@@ -26,7 +26,7 @@ public class AccountController : Controller
     {
         var jwt = Request.Cookies["Jwt"];
         var refreshToken = Request.Cookies["refreshToken"];
-        var role = Role.Candidate.ToString();
+        var role = Role.Unknown.ToString();
         if (jwt != null)
         {
             role = _jWTService.ExtractFromToken(jwt, ClaimTypes.Role);
@@ -40,7 +40,7 @@ public class AccountController : Controller
 
             var cookieOptions = new CookieOptions
             {
-                Expires = DateTime.Now.AddDays(1)
+                Expires = DateTime.UtcNow.AddDays(1)
             };
 
             Response.Cookies.Append("jwt", newJwtToBeAdded, cookieOptions);
@@ -48,7 +48,7 @@ public class AccountController : Controller
         return (int)(Role)Enum.Parse(typeof(Role), role) switch
         {
             (int)Role.Admin => RedirectToAction("AdminDashboard", "Home"),
-            (int)Role.Candidate => View(),
+            (int)Role.Candidate => RedirectToAction("CandidateDashboard", "Home"),
             _ => View()
         };
     }
@@ -69,20 +69,24 @@ public class AccountController : Controller
         var token = _jWTService.GenerateToken(user.Id.ToString(), user.Email, ((Role)user.Role).ToString(), user.FirstName);
         var refreshToken = _jWTService.GenerateRefreshToken(user.Id.ToString());
 
-        var cookieOptions = new CookieOptions
+        var cookieOptionsForRefreshToken = new CookieOptions
         {
-            Expires = model.RememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(24)
+            Expires = model.RememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddDays(1)
         };
 
-        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
-        Response.Cookies.Append("jwt", token, cookieOptions);
+        Response.Cookies.Append("refreshToken", refreshToken, cookieOptionsForRefreshToken);
+        Response.Cookies.Append("jwt", token, new CookieOptions
+        {
+            Expires = DateTime.UtcNow.AddDays(1)
+        });
+
         var role = user.Role;
 
         TempData["FromLogin"] = true;
         return role switch
         {
             (int)Role.Admin => RedirectToAction("AdminDashboard", "Home"),
-            (int)Role.Candidate => View(),
+            (int)Role.Candidate => RedirectToAction("CandidateDashboard", "Home"),
             _ => View()
         };
     }

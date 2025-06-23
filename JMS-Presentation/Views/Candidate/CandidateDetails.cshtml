@@ -9,26 +9,31 @@
 <div class="main-content">
     <h2 class="primaryText mb-4">Profile Information</h2>
 
-    <div class="profile-card">
-        <div class="d-flex align-items-center gap-3 mb-4">
-            <div class="">
-                <i class="fas fa-user iconWithBg"></i>
+    <div class="profile-card col col-sm-10 col-lg-6">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="">
+                    <i class="fas fa-user iconWithBg"></i>
+                </div>
+                <h3 class="primaryText">Candidate Details</h3>
             </div>
-            <h3 class="primaryText">Candidate Details</h3>
+            <div class="profileStatus d-flex align-items-center gap-2 @(Model.IsActive ? "activeStatus" : "notActiveStatus")">
+                <span></span><span>@(Model.IsActive ? "Active" : "Not Active")</span>
+            </div>
         </div>
 
         <form>
-            <div class="form-group col col-sm-10 col-lg-6">
+            <div class="form-group col">
                 <label class="form-label">First Name</label>
                 <input asp-for="FirstName" class="form-control" disabled readonly>
             </div>
 
-            <div class="form-group col col-sm-10 col-lg-6">
+            <div class="form-group col">
                 <label class="form-label">Last Name</label>
                 <input asp-for="LastName" class="form-control" disabled readonly>
             </div>
 
-            <div class="form-group col col-sm-10 col-lg-6">
+            <div class="form-group col">
                 <label class="form-label">Email</label>
                 <input asp-for="Email" disabled class="form-control" readonly>
             </div>
@@ -37,7 +42,8 @@
     <div class="col col-sm-10 col-lg-6">
         <h3 class="primaryText mb-1">Candidate's Applications</h3>
         <div class="position-relative d-flex justify-content-end mb-3">
-            <input class="form-control searchInput w-auto" type="text" id="searchCandidateApplication" placeholder="Search" />
+            <input class="form-control searchInput w-auto" type="text" id="searchCandidateApplication"
+                placeholder="Search" />
             <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
         </div>
         <div class="table-responsive">
@@ -50,6 +56,13 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @if (Model.JobApplications.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="3" class="primaryText text-center">No job applications found for this candidate.
+                            </td>
+                        </tr>
+                    }
                     @foreach (JobApplicationViewModel application in Model.JobApplications)
                     {
                         <tr data-id="@application.Id" data-statusId="@application.ApplicationStatus">
@@ -63,7 +76,7 @@
                                 @application.JobApplicationStatusName
                             </td>
                             <td>
-                                @application.AppliedAt.ToString("dd/MM/yyyy")
+                                @application.AppliedAt.ToString("dd-MM-yyyy")
                             </td>
                         </tr>
                     }
@@ -108,21 +121,28 @@
                         var applications = res?.items;
                         var tableBody = $('#candidateApplicationTable tbody');
                         tableBody.empty();
+                        if (totalCount == 0) {
+                            tableBody.append(`<tr><td colspan="3" class="primaryText text-center">No job applications found for this candidate.</td></tr>`);
+                            $(".pagination").addClass("d-none");
+                        }
+                        else {
+                            $(".pagination").removeClass("d-none");
+                        }
                         applications.forEach(application => {
                             var row = `<tr data-id="${application.id}" data-statusId="${application.applicationStatus}">
-                                                <td>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <i class="fas fa-file-alt"></i>
-                                                        ${application.title}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    ${application.jobApplicationStatusName}
-                                                </td>
-                                                <td>
-                                                    ${formatDateTimeToDate(application.appliedAt)}
-                                                </td>
-                                            </tr>`;
+                                                                            <td>
+                                                                                <div class="d-flex align-items-center gap-2">
+                                                                                    <i class="fas fa-file-alt"></i>
+                                                                                    ${application.title}
+                                                                                </div>
+                                                                            </td>
+                                                                            <td>
+                                                                                ${application.jobApplicationStatusName}
+                                                                            </td>
+                                                                            <td>
+                                                                                ${formatDateTimeToDate(application.appliedAt)}
+                                                                            </td>
+                                                                        </tr>`;
                             tableBody.append(row);
                         });
                     },

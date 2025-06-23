@@ -11,7 +11,4 @@ public class ProfileViewModel
     public string LastName { get; set; } = null!;
     [Required]
     public string Email { get; set; } = null!;
-    [Required]
-    public string ResumeUrl { get; set; } = null!;
-    public IFormFile? Resume { get; set; }
 }

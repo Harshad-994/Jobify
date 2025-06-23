@@ -101,6 +101,13 @@
                 </tr>
             </thead>
             <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="primaryText text-center">No job applications found.</td>
+                    </tr>
+                }
+
                 @foreach (JobApplicationViewModel application in Model)
                 {
                     <tr data-id="@application.Id" data-statusId="@application.ApplicationStatus">
@@ -114,7 +121,7 @@
                             @application.FirstName @application.LastName
                         </td>
                         <td>
-                            @application.AppliedAt.ToString("dd/MM/yyyy")
+                            @application.AppliedAt.ToString("dd-MM-yyyy")
                         </td>
                         <td>
                             @application.JobApplicationStatusName
@@ -136,9 +143,12 @@
             </tbody>
         </table>
     </div>
-    <div class="" id="applicationPagination">
-        @await Html.PartialAsync("_Pagination")
-    </div>
+    @if (Model.Count > 0)
+    {
+        <div class="" id="applicationPagination">
+            @await Html.PartialAsync("_Pagination")
+        </div>
+    }
 </div>
 
 @section Scripts {
@@ -173,35 +183,42 @@
                         var applications = res?.items;
                         var tableBody = $('#applicationTable tbody');
                         tableBody.empty();
+                        if (totalCount == 0) {
+                            tableBody.append("<tr><td colspan='6' class='primaryText text-center'>No job applications found.</td></tr>");
+                            $(".pagination").addClass("d-none");
+                        }
+                        else {
+                            $(".pagination").removeClass("d-none");
+                        }
                         applications.forEach(application => {
                             var row = `<tr data-id="${application.id}" data-statusId="${application.applicationStatus}">
-                                                                                                                                <td>
-                                                                                                                                <div class="d-flex align-items-center gap-2">
-                                                                                                                                <i class="fas fa-file-alt"></i>
-                                                                                                                                ${application.title}
-                                                                                                                                </div>
-                                                                                                                                </td>
-                                                                                                                                <td>
-                                                                                                                                ${application.firstName} ${application.lastName}
-                                                                                                                                </td>
-                                                                                                                                <td>
-                                                                                                                                ${formatDateTimeToDate(application.appliedAt)}
-                                                                                                                                </td>
-                                                                                                                                <td>
+                                                                                                                                                                                            <td>
+                                                                                                                                                                                            <div class="d-flex align-items-center gap-2">
+                                                                                                                                                                                            <i class="fas fa-file-alt"></i>
+                                                                                                                                                                                            ${application.title}
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                            </td>
+                                                                                                                                                                                            <td>
+                                                                                                                                                                                            ${application.firstName} ${application.lastName}
+                                                                                                                                                                                            </td>
+                                                                                                                                                                                            <td>
+                                                                                                                                                                                            ${formatDateTimeToDate(application.appliedAt)}
+                                                                                                                                                                                            </td>
+                                                                                                                                                                                            <td>
 
-                                                                                                                                ${application.jobApplicationStatusName}
-                                                                                                                                </td>
-                                                                                                                                <td>
-                                                                                                                                <button data-bs-target="#updateApplicationStatusModal" data-bs-toggle="modal" class="btn secondaryBtn changeApplicationStatusBtn" >Update Status</button>
-                                                                                                                                </td>
-                                                                                                                                <td>
-                                                                                                                                <div class="d-flex align-items-center gap-3 actions p-1">
-                                                                                                                                <i data-bs-toggle="modal" data-bs-target="#applicationInfoModal" class="fa-regular fa-eye applicationInfoBtn"></i>
-                                                                                                                                <i class="fas fa-trash deleteApplicationBtn" data-bs-toggle="modal"
-                                                                                                                                data-bs-target="#deleteApplicationModal"></i>
-                                                                                                                                </div>
-                                                                                                                                </td>
-                                                                                                                                </tr>`;
+                                                                                                                                                                                            ${application.jobApplicationStatusName}
+                                                                                                                                                                                            </td>
+                                                                                                                                                                                            <td>
+                                                                                                                                                                                            <button data-bs-target="#updateApplicationStatusModal" data-bs-toggle="modal" class="btn secondaryBtn changeApplicationStatusBtn" >Update Status</button>
+                                                                                                                                                                                            </td>
+                                                                                                                                                                                            <td>
+                                                                                                                                                                                            <div class="d-flex align-items-center gap-3 actions p-1">
+                                                                                                                                                                                            <i data-bs-toggle="modal" data-bs-target="#applicationInfoModal" class="fa-regular fa-eye applicationInfoBtn"></i>
+                                                                                                                                                                                            <i class="fas fa-trash deleteApplicationBtn" data-bs-toggle="modal"
+                                                                                                                                                                                            data-bs-target="#deleteApplicationModal"></i>
+                                                                                                                                                                                            </div>
+                                                                                                                                                                                            </td>
+                                                                                                                                                                                            </tr>`;
                             tableBody.append(row);
                         });
                     },

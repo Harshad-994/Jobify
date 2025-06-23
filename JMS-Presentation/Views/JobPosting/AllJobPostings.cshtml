@@ -24,69 +24,81 @@
     </div>
 </div>
 
-<div class="content-body">
-    <h2 class="primaryText mb-2">All Job Postings</h2>
-    <div class="d-flex justify-content-end align-items-center gap-3 mb-4">
-        <div class="position-relative">
-            <input class="form-control searchInput" type="text" id="searchCategory" placeholder="Search" />
-            <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
-        </div>
-        <a class="btn primaryBtn" href="@Url.Action("AddJobPosting", "JobPosting")">
-            <i class=" fas fa-plus me-2"></i>
-            Add Job
-        </a>
+<h2 class="primaryText mb-2">All Job Postings</h2>
+<div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+    <div class="position-relative">
+        <input class="form-control searchInput" type="text" id="searchCategory" placeholder="Search" />
+        <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
     </div>
+    <a class="btn primaryBtn" href="@Url.Action("AddJobPosting", "JobPosting")">
+        <i class=" fas fa-plus me-2"></i>
+        Add Job
+    </a>
+</div>
 
-    <div class="table-responsive">
-        <table class="table" id="jobPostingTable">
-            <thead class="">
+<div class="table-responsive">
+    <table class="table" id="jobPostingTable">
+        <thead class="">
+            <tr>
+                <th>Title</th>
+                <th>Company</th>
+                <th>Location</th>
+                <th>Category</th>
+                <th>Posted At</th>
+                <th>Closing Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count == 0)
+            {
                 <tr>
-                    <th>Title</th>
-                    <th>Company</th>
-                    <th>Location</th>
-                    <th>Category</th>
-                    <th>Closing Date</th>
-                    <th>Actions</th>
+                    <td colspan="7" class="primaryText text-center">No job postings found.</td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (JobPostingViewModel job in Model)
-                {
-                    <tr data-id="@job.Id">
-                        <td>
-                            <div class="category-name d-flex align-items-center gap-2">
-                                <i class="fas fa-briefcase" aria-hidden="true"></i>
-                                @job.Title
-                            </div>
-                        </td>
-                        <td>
-                            @job.CompanyName
-                        </td>
-                        <td>
-                            @job.Location
-                        </td>
-                        <td>
-                            @job.CategoryName
-                        </td>
-                        <td>
-                            @job.ClosingDate
-                        </td>
-                        <td>
-                            <div class="d-flex gap-4 p-1 actions">
-                                <a href="@Url.Action("EditJobPosting", "JobPosting", new { jobId = job.Id })"><i
-                                        class="fa-solid fa-pen"></i></a>
-                                <i class="fas fa-trash deleteJobPostingBtn" data-bs-toggle="modal"
-                                    data-bs-target="#deleteJobPostingModal"></i>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            }
+            @foreach (JobPostingViewModel job in Model)
+            {
+                <tr data-id="@job.Id">
+                    <td>
+                        <div class="category-name d-flex align-items-center gap-2">
+                            <i class="fas fa-briefcase" aria-hidden="true"></i>
+                            @job.Title
+                        </div>
+                    </td>
+                    <td>
+                        @job.CompanyName
+                    </td>
+                    <td>
+                        @job.Location
+                    </td>
+                    <td>
+                        @job.CategoryName
+                    </td>
+                    <td class="jobCreatedDate" data-date="@job.CreatedAt">
+
+                    </td>
+                    <td>
+                        @job.ClosingDate.ToString("dd-MM-yyyy")
+                    </td>
+                    <td>
+                        <div class="d-flex gap-4 p-1 actions">
+                            <a href="@Url.Action("EditJobPosting", "JobPosting", new { jobId = job.Id })"><i
+                                    class="fa-solid fa-pen"></i></a>
+                            <i class="fas fa-trash deleteJobPostingBtn" data-bs-toggle="modal"
+                                data-bs-target="#deleteJobPostingModal"></i>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+@if (Model.Count > 0)
+{
     <div class="" id="jobPostingPagination">
         @await Html.PartialAsync("_Pagination")
     </div>
+}
 </div>
 
 @section Scripts {
@@ -119,8 +131,15 @@
                         var jobs = res?.items;
                         var tableBody = $('#jobPostingTable tbody');
                         tableBody.empty();
+                        if (totalCount == 0) {
+                            tableBody.append("<tr><td colspan='7' class='primaryText text-center'>No job postings found.</td></tr>");
+                            $(".pagination").addClass("d-none");
+                        }
+                        else {
+                            $(".pagination").removeClass("d-none");
+                        }
                         jobs.forEach(job => {
-                            var row = `<tr data-id="${job.id}"><td><div class="category-name d-flex align-items-center gap-2"><i class="fas fa-briefcasearia-hidden="true"><i>${job.title}</div></td><td>${job.companyName}</td><td>${job.location}</td><td>${job.categoryName}</td><td>${job.closingDate}</td><td><div class="d-flex gap-4 p-1 actions"><a href="${`/JobPosting/EditJobPosting?jobId=${job.id}`}"><i class="fa-solid fa-pen"></i></a><i class="fas fa-trash deleteJobPostingBtn" data-bs-toggle="modal" data-bs-target="#deleteJobPostingModal"></i></div></td></tr>`;
+                            var row = `<tr data-id="${job.id}"><td><div class="category-name d-flex align-items-center gap-2"><i class="fas fa-briefcase" aria-hidden="true"></i>${job.title}</div></td><td>${job.companyName}</td><td>${job.location}</td><td>${job.categoryName}</td><td>${timeAgoDateFormat(job.createdAt)}</td><td>${formatDateOnly(job.closingDate)}</td><td><div class="d-flex gap-4 p-1 actions"><a href="${`/JobPosting/EditJobPosting?jobId=${job.id}`}"><i class="fa-solid fa-pen"></i></a><i class="fas fa-trash deleteJobPostingBtn" data-bs-toggle="modal" data-bs-target="#deleteJobPostingModal"></i></div></td></tr>`;
                             tableBody.append(row);
                         });
                     },
@@ -131,7 +150,7 @@
                 });
             }
 
-            renderJobPostings(false);
+            renderJobPostings(true);
 
             $(document).on('click', '.deleteJobPostingBtn', function (e) {
                 e.stopPropagation();
@@ -202,10 +221,21 @@
             }));
 
             //getting detail of job posting
-            $(document).on('click', '#jobPostingTable tbody tr', function () {
+            $(document).on('click', '#jobPostingTable tbody tr[data-id]', function () {
                 var jobId = $(this).data('id');
                 window.location.href = `/JobPosting/JobPostingDetails?jobId=${jobId}`;
             });
+
+            //function to format only created at date
+            function formatCreatedAtDateOfAllJobPostings() {
+                var tableBody = $('#jobPostingTable tbody');
+                tableBody.find('.jobCreatedDate').each(function () {
+                    var date = $(this).data('date');
+                    var formattedDate = timeAgoDateFormat(date);
+                    $(this).text(formattedDate);
+                });
+            }
+            formatCreatedAtDateOfAllJobPostings();
 
         });
     </script>

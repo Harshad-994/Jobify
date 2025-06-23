@@ -1,0 +1,72 @@
+@using JMS_Presentation.ViewModels
+@model CandidateDashboardViewModel;
+@{
+    Layout = "_CandidateLayout";
+    ViewData["Title"] = "Candidate Dashboard";
+}
+
+<h2 class="section-title">Dashboard</h2>
+
+<div class="row mb-5 dashboardCards">
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                <div class="metric-icon mb-3">
+                    <i class="fas fa-briefcase" aria-hidden="true"></i>
+                </div>
+                <h6 class="text-muted mb-2">Active Jobs</h6>
+                <h5 class="fw-bold mb-3">@Model.TotalNoOfActiveJobs Postings</h5>
+                <p class="text-muted small mb-2">There @(Model.TotalNoOfActiveJobs > 1 ? "are" : "is")
+                    @Model.TotalNoOfActiveJobs active job @(Model.TotalNoOfActiveJobs > 1 ? "postings" : "posting").</p>
+            </div>
+        </div>
+    </div>
+    <div class=" col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                <div class="metric-icon mb-3">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h6 class="text-muted mb-2">Open Applications</h6>
+                <h5 class="fw-bold mb-3">@Model.TotalNoOfApplications Applications</h5>
+                <p class="text-muted small mb-2">You have @Model.TotalNoOfApplications open job applications.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a class="btn primaryBtn" href="@Url.Action("AllJobApplicationsForCandidate", "JobApplication")">My
+                        Applications</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class=" col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center p-4">
+                <div class="metric-icon mb-3">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+                <h6 class="text-muted mb-2">Quick Apply</h6>
+                <h5 class="fw-bold mb-3">Find New Jobs</h5>
+                <p class="text-muted small mb-2">Browse through job postings and apply quickly.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a class="btn primaryBtn" href="">Quick Apply</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+
+            document.title = document.title + " - " + `@ViewData["Title"]`;
+
+            if (Boolean(`@TempData["FromLogin"]`.toString())) {
+                successToast("You have successfully logged in.");
+            }
+
+        });
+    </script>
+
+}

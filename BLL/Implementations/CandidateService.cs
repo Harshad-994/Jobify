@@ -12,12 +12,16 @@ public class CandidateService : ICandidateService
 {
     private readonly ICandidateRepository _candidateRepository;
     private readonly IJobApplicationService _jobApplicationService;
+    private readonly ICloudinaryService _cloudinaryService;
     private readonly ILogger<CandidateService> _logger;
-    public CandidateService(ILogger<CandidateService> logger, ICandidateRepository candidateRepository, IJobApplicationService jobApplicationService)
+    private readonly IPasswordEncryptionService _passwordEncryptionService;
+    public CandidateService(ILogger<CandidateService> logger, ICandidateRepository candidateRepository, IJobApplicationService jobApplicationService, ICloudinaryService cloudinaryService, IPasswordEncryptionService passwordEncryptionService)
     {
         _logger = logger;
         _candidateRepository = candidateRepository;
         _jobApplicationService = jobApplicationService;
+        _cloudinaryService = cloudinaryService;
+        _passwordEncryptionService = passwordEncryptionService;
     }
 
     public async Task<CandidateProfileDto> GetCandidateProfile(Guid candidateId)
@@ -37,12 +41,33 @@ public class CandidateService : ICandidateService
             Email = candidateEntity.Email,
             Role = candidateEntity.Role,
             IsActive = candidateEntity.IsActive,
-            ResumeUrl = candidateEntity.ResumeUrl,
+            ResumeUrl = !string.IsNullOrEmpty(candidateEntity.ResumeUrl) ? _passwordEncryptionService.DecryptAsync(candidateEntity.ResumeUrl).Result : null,
             UpdatedAt = candidateEntity.UpdatedAt,
             JobApplications = _jobApplicationService.GetAllApplicationsOfCandidateAsync(candidateEntity.Id).Result
 
         };
         return candidateProfileDto;
+    }
+
+    public async Task<AdminProfileDto> GetAdminProfile(Guid userId)
+    {
+        var user = await _candidateRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            _logger.LogWarning("User with id {candidateId} not found.", userId);
+            throw new CandidateNotFoundException(userId);
+        }
+        var adminProfileDto = new AdminProfileDto
+        {
+
+            Id = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email,
+            Role = user.Role,
+
+        };
+        return adminProfileDto;
     }
 
     public async Task<bool> UpdateCandidateProfile(CandidateProfileDto candidateProfile)
@@ -51,19 +76,43 @@ public class CandidateService : ICandidateService
 
         if (candidateEntity == null)
         {
-            _logger.LogWarning("Candidate with id {candidateId} not found.", candidateProfile.Id);
+            _logger.LogWarning("User with id {candidateId} not found.", candidateProfile.Id);
             throw new CandidateNotFoundException(candidateProfile.Id);
+        }
+
+        if (candidateProfile.Resume != null)
+        {
+            var uploadedUrl = await _cloudinaryService.UploadResumeFile(candidateProfile.Resume);
+            candidateEntity.ResumeUrl = await _passwordEncryptionService.EncryptAsync(uploadedUrl);
+        }
+        else
+        {
+            candidateEntity.ResumeUrl = candidateProfile.ResumeUrl;
         }
 
         candidateEntity.FirstName = candidateProfile.FirstName;
         candidateEntity.LastName = candidateProfile.LastName;
-        if (candidateEntity.Role == (int)Role.Candidate)
-        {
-            candidateEntity.ResumeUrl = candidateProfile.ResumeUrl;
-        }
         candidateEntity.UpdatedAt = DateTime.UtcNow;
         await _candidateRepository.UpdateAsync(candidateEntity);
-        _logger.LogInformation("Candidate profile with id {candidateId} updated successfully", candidateProfile.Id);
+        _logger.LogInformation("User profile with id {candidateId} updated successfully", candidateProfile.Id);
+        return true;
+    }
+
+    public async Task<bool> UpdateAdminProfile(AdminProfileDto adminProfile)
+    {
+        var candidateEntity = await _candidateRepository.GetByIdAsync(adminProfile.Id);
+
+        if (candidateEntity == null)
+        {
+            _logger.LogWarning("User with id {candidateId} not found.", adminProfile.Id);
+            throw new CandidateNotFoundException(adminProfile.Id);
+        }
+
+        candidateEntity.FirstName = adminProfile.FirstName;
+        candidateEntity.LastName = adminProfile.LastName;
+        candidateEntity.UpdatedAt = DateTime.UtcNow;
+        await _candidateRepository.UpdateAsync(candidateEntity);
+        _logger.LogInformation("User profile with id {candidateId} updated successfully", adminProfile.Id);
         return true;
     }
 
@@ -111,7 +160,7 @@ public class CandidateService : ICandidateService
                 Email = c.Email,
                 Role = c.Role,
                 IsActive = c.IsActive,
-                ResumeUrl = c.ResumeUrl,
+                ResumeUrl = !string.IsNullOrEmpty(c.ResumeUrl) ? _passwordEncryptionService.DecryptAsync(c.ResumeUrl).Result : null,
                 UpdatedAt = c.UpdatedAt,
                 CreatedAt = c.CreatedAt
             });

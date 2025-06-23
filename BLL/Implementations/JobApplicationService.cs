@@ -91,6 +91,7 @@ public class JobApplicationService : IJobApplicationService
             AppliedAt = j.AppliedAt,
             UpdatedAt = j.UpdatedAt,
             ApplicationStatus = j.ApplicationStatus,
+            CompanyName = j.JobPosting.CompanyName,
             JobApplicationStatusName = ((ApplicationStatus)j.ApplicationStatus).ToString()
         }).ToList();
         return jobApplicationDtos;
@@ -169,6 +170,7 @@ public class JobApplicationService : IJobApplicationService
                 Title = a.JobPosting.Title,
                 FirstName = a.User.FirstName,
                 LastName = a.User.LastName,
+                CompanyName = a.JobPosting.CompanyName,
                 JobPostingId = a.JobPostingId,
                 CoverLetter = a.CoverLetter,
                 AppliedAt = a.AppliedAt,

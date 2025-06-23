@@ -66,7 +66,7 @@ public class PasswordEncryptionService : IPasswordEncryptionService
             using CryptoStream cryptoStream = new(output, aes.CreateEncryptor(), CryptoStreamMode.Write);
             await cryptoStream.WriteAsync(Encoding.Unicode.GetBytes(clearText));
             await cryptoStream.FlushFinalBlockAsync();
-            return HashPassword(output.ToArray());
+            return Convert.ToBase64String(output.ToArray());
         }
         catch (Exception ex)
         {
@@ -94,5 +94,28 @@ public class PasswordEncryptionService : IPasswordEncryptionService
             throw new PasswordHashingException(ex);
         }
 
+    }
+
+    public string HashPassword(string password)
+    {
+        if (password == null)
+            throw new ArgumentNullException(nameof(password));
+        return HashPassword(Encoding.UTF8.GetBytes(password));
+    }
+
+
+
+    public async Task<string> DecryptAsync(string encryptedText)
+    {
+        string passphrase = _salt;
+        using Aes aes = Aes.Create();
+        aes.Key = DeriveKeyFromSalt(passphrase);
+        aes.IV = IV;
+        byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+        using MemoryStream input = new(encryptedBytes);
+        using CryptoStream cryptoStream = new(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
+        using MemoryStream output = new();
+        await cryptoStream.CopyToAsync(output);
+        return Encoding.Unicode.GetString(output.ToArray());
     }
 }

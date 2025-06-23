@@ -1,0 +1,273 @@
+@using DAL.Data.Enums
+@using JMS_Presentation.ViewModels
+@model List<JobApplicationViewModel>;
+
+@{
+    Layout = "_CandidateLayout";
+    ViewData["Title"] = "Job Applications";
+}
+
+@* modal for deleteing a application*@
+<div class="modal fade" id="withdrawApplicationModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">withdraw application</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to withdraw this application?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn secondaryBtn" data-bs-dismiss="modal">No</button>
+                <button type="button" class="btn primaryBtn confirmWithdraw">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-body">
+    <h2 class="primaryText mb-2">My Applications</h2>
+    <div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+        <div class="position-relative">
+            <input class="form-control searchInput" type="text" id="searchApplication" placeholder="Search" />
+            <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
+        </div>
+        <select class="form-select w-auto" id="applicationFilterStatus"
+            asp-items="@Html.GetEnumSelectList<ApplicationStatus>()">
+            <option selected disabled>Select Application Status</option>
+            <option value="@null">All</option>
+        </select>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table" id="applicationTable">
+            <thead class="">
+                <tr>
+                    <th>Job Title</th>
+                    <th>Applied At</th>
+                    <th>Status</th>
+                    <th>Company Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="primaryText text-center">No job applications found.</td>
+                    </tr>
+                }
+
+                @foreach (JobApplicationViewModel application in Model)
+                {
+                    <tr data-id="@application.Id" data-statusId="@application.ApplicationStatus">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-file-alt"></i>
+                                @application.Title
+                            </div>
+                        </td>
+                        <td>
+                            @application.AppliedAt.ToString("dd-MM-yyyy")
+                        </td>
+                        <td>
+                            @application.JobApplicationStatusName
+                        </td>
+                        <td>
+                            @application.CompanyName
+                        </td>
+                        <td>
+                            <button class="btn primaryBtn rounded-pill withdrawApplicationBtn"
+                                data-bs-target="#withdrawApplicationModal" data-bs-toggle="modal">withdraw</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Count > 0)
+    {
+        <div class="" id="applicationPagination">
+            @await Html.PartialAsync("_Pagination")
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            var currentPage = 1;
+            var pageSize = $('#applicationPagination .pageSize').val() || 5;
+            var totalPages = 1;
+            var totalCount = 0;
+            var searchText = "";
+            var applicationStatus = null;
+
+            function renderApplications(renderMarkup = true) {
+                var filter = {
+                    page: currentPage,
+                    pageSize: pageSize,
+                    SearchText: searchText,
+                    ApplicationStatus: applicationStatus
+                };
+                $.ajax({
+                    url: '@Url.Action("GetAllJobApplications", "JobApplication")' + "?" + $.param(filter),
+                    type: 'GET',
+                    success: function (res) {
+                        totalCount = res?.totalCount;
+                        totalPages = res?.totalPages;
+                        currentPage = res?.page;
+                        updatePagination();
+                        if (!renderMarkup) {
+                            return;
+                        }
+                        var applications = res?.items;
+                        var tableBody = $('#applicationTable tbody');
+                        tableBody.empty();
+                        if (totalCount == 0) {
+                            tableBody.append("<tr><td colspan='6' class='primaryText text-center'>No job applications found.</td></tr>");
+                            $(".pagination").addClass("d-none");
+                        }
+                        else {
+                            $(".pagination").removeClass("d-none");
+                        }
+                        applications.forEach(application => {
+                            var row = `<tr data-id="${application.id}" data-statusId="${application.applicationStatus}">
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center gap-2">
+                                                                            <i class="fas fa-file-alt"></i>
+                                                                            ${application.title}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        ${formatDateTimeToDate(application.appliedAt)}
+                                                                    </td>
+                                                                    <td>
+                                                                        ${application.jobApplicationStatusName}
+                                                                    </td>
+                                                                    <td>
+                                                                        ${application.companyName}
+                                                                    </td>
+                                                                    <td>
+                                                                        <button class="btn primaryBtn rounded-pill withdrawApplicationBtn">withdraw</button>
+                                                                    </td>
+                                                                </tr>`;
+                            tableBody.append(row);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            }
+
+            renderApplications(false);
+
+            function updatePagination() {
+                $('#applicationPagination .pagination .stats').text(`Showing ${totalCount != 0 ? ((currentPage - 1) * pageSize) + 1 : 0}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`);
+                $('#applicationPagination .pageSize').val(pageSize);
+
+                // Enable/disable pagination buttons
+                $('#applicationPagination .prev-page').prop('disabled', currentPage === 1);
+                $('#applicationPagination .next-page').prop('disabled', currentPage === totalPages);
+            }
+
+            //to go on previous page
+            $('#applicationPagination .prev-page').click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderApplications()
+                }
+            });
+
+            //to go on next page
+            $('#applicationPagination .next-page').click(function () {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderApplications();
+                }
+            });
+
+            //changing the value of the pagesize on changing of the drop down
+            $(document).on('change', '#applicationPagination .pageSize', function () {
+                pageSize = $(this).val();
+                currentPage = 1;
+                renderApplications();
+            });
+
+            //searching the application
+            $('#searchApplication').on('input', debounce(function () {
+                searchText = $(this).val();
+                currentPage = 1;
+                renderApplications();
+            }));
+
+            //filtering the applications
+            $('#applicationFilterStatus').on('change', function () {
+                applicationStatus = $(this).val();
+                currentPage = 1;
+                renderApplications();
+            })
+
+            //to change application status
+            $(document).on('click', '.withdrawApplicationBtn', function () {
+                var applicationId = $(this).closest('tr').data('id');
+                $("#withdrawApplicationModal .confirmWithdraw").attr('applicationId', applicationId);
+            });
+
+            $(document).on('click', '#withdrawApplicationModal .confirmWithdraw', function () {
+                var applicationId = $(this).attr('applicationId');
+                var newStatus = @((int)ApplicationStatus.Withdrawn);
+                $.ajax({
+                    url: '@Url.Action("UpdateApplicationStatus", "JobApplication")',
+                    type: 'POST',
+                    data: { applicationId: applicationId, newStatus: newStatus },
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                            renderApplications();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+                $("#withdrawApplicationModal").modal("hide");
+            });
+
+            //getting application information
+            @* $(document).on('click', '.applicationInfoBtn', function () {
+                var applicationId = $(this).closest('tr').data('id');
+                var params = {
+                    applicationId: applicationId,
+                };
+                $.ajax({
+                    url: '@Url.Action("GetJobApplication", "JobApplication")' + "?" + $.param(params),
+                    type: 'GET',
+                    success: function (res) {
+                        console.log(res)
+                        var coverLetter = res?.coverLetter;
+                        var resumeUrl = res?.resumeUrl;
+                        $("#applicationInfoModal .coverLetter").val(coverLetter);
+                        $("#applicationInfoModal .resumeLink").attr('href', resumeUrl);
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+                $("#applicationInfoModal").modal("show");
+            }); *@
+
+                });
+    </script>
+}

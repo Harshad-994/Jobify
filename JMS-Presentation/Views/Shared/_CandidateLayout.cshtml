@@ -1,14 +1,115 @@
+@{
+    var userId = User.FindFirst("UserId")?.Value;
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+}
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Jobify</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/vendor/Toastify.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/pages/Dashboard.css" />
+    <link rel="stylesheet" href="~/css/pages/JobDetails.css" />
 </head>
 
 <body>
+    <nav class="notifications"></nav>
 
+    @* modal for confirm logout*@
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to logout?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn secondaryBtn" data-bs-dismiss="modal">No</button>
+                    <form class="confirmLogoutForm" method="post" action="@Url.Action("Logout", "Account")">
+                        <button type=" submit" class="btn primaryBtn">Yes</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid p-0">
+        <nav class="navbar navbar-expand-md navbar-light bg-white d-md-none border-bottom">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1">Jobify</span>
+                <button class="navbar-toggler" type="button" id="sidebarToggle">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <div class="d-flex">
+            <!-- Sidebar -->
+            <div class="sidebar p-0" id="sidebar">
+                <div class="p-4">
+                    <h5 class="fw-bold mb-4 d-none d-md-block">Jobify</h5>
+                    <nav class="nav flex-column">
+                        <a class="nav-link @(currentController == "Home" && currentAction == "CandidateDashboard" ? "active" : "")" " href="
+                            @Url.Action("CandidateDashboard", "Home")"><i class=" fas
+                            fa-th-large me-2"></i> Dashboard</a>
+                        <a class="nav-link @(currentController == "JobCategory" ? "active" : "")" " href="@Url.Action("AllCategories", "JobCategory")"><i class="fa-solid fa-shapes me-2"></i> Job Categories</a>
+                        <a class="nav-link @(currentController == "JobPosting" ? "active" : "")" " href="
+                            @Url.Action("AllJobPostings", "JobPosting")"><i class="fas fa-briefcase me-2"></i>Search Jobs</a>
+                        <a class="nav-link @(currentController == "JobApplication" ? "active" : "")" " href="@Url.Action("AllJobApplicationsForCandidate", "JobApplication")"><i
+                                class="fas fa-file-alt me-2"></i>My Applications</a>
+                        <a class="nav-link @(currentController == "Home" && currentAction == "CandidateProfile" ? "active" : "")""
+                            href="@Url.Action("CandidateProfile", "Home", new { userId = User.FindFirst("UserId")?.Value })"><i
+                                class="fas fa-user me-2"></i>
+                            Profile</a>
+                        <a class="nav-link" data-bs-target="#logoutModal" data-bs-toggle="modal" href="#"><i
+                                class="fa-solid fa-arrow-right-from-bracket me-2"></i>
+                            Logout</a>
+                    </nav>
+                </div>
+
+                <div class="p-4 mt-auto">
+                    <div class="d-flex align-items-center">
+                        <div class="admin-profile me-3">C</div>
+                        <div>
+                            <div class="fw-semibold">@User.FindFirst("Name")?.Value</div>
+                            <small class="text-muted">Candidate</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Container for rendering -->
+            <div class="main-content p-4">
+                @RenderBody()
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/vendor/Toastify.js"></script>
+    <script src="~/js/pages/dashboard.js"></script>
+
+    <script src="https://kit.fontawesome.com/9c4a1646d2.js" crossorigin="anonymous"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    
 </body>
 
 </html>

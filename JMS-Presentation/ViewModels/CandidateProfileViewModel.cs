@@ -9,6 +9,7 @@ public class CandidateProfileViewModel
     public int Role { get; set; }
     public bool IsActive { get; set; }
     public string? ResumeUrl { get; set; }
+    public IFormFile? Resume { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public List<JobApplicationViewModel> JobApplications { get; set; } = new List<JobApplicationViewModel>();

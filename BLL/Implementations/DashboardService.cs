@@ -27,7 +27,7 @@ public class DashboardService : IDashboardService
         var totalNoOfJobs = await _jobRepository.GetAll().CountAsync();
         var totalNoOfCandidates = await _candidateRepository.GetAll().Where(u => u.Role == (int)Role.Candidate).CountAsync();
         var totalNoOfApplications = await _jobApplicationRepository.GetAll().CountAsync();
-        var recentJobPostings = await _jobRepository.GetAll().Include(j=>j.JobCategory).OrderByDescending(j => j.CreatedAt).Take(3).ToListAsync();
+        var recentJobPostings = await _jobRepository.GetAll().Include(j => j.JobCategory).OrderByDescending(j => j.CreatedAt).Take(3).ToListAsync();
         var recentJobPostingsDto = recentJobPostings.Select(j => new JobPostingDto
         {
             Id = j.Id,
@@ -55,6 +55,19 @@ public class DashboardService : IDashboardService
             TotalNoOfCandidates = totalNoOfCandidates,
             TotalNoOfApplications = totalNoOfApplications,
             RecentJobPostings = recentJobPostingsDto
+        };
+    }
+
+    public async Task<CandidateDashboardStatsDto> GetCandidateDashboardStats(Guid CandidateId)
+    {
+        List<int> validOpenApplicationStatus = new() { (int)ApplicationStatus.Applied, (int)ApplicationStatus.UnderReview };
+        var totalNoOfActiveJobs = await _jobRepository.GetAll().Where(j => j.IsActive).CountAsync();
+        var totalNoOfApplications = await _jobApplicationRepository.GetAll().Where(a => a.UserId == CandidateId && validOpenApplicationStatus.Contains(a.ApplicationStatus)).CountAsync();
+
+        return new CandidateDashboardStatsDto
+        {
+            TotalNoOfActiveJobs = totalNoOfActiveJobs,
+            TotalNoOfApplications = totalNoOfApplications
         };
     }
 }

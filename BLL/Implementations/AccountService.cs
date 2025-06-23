@@ -31,7 +31,7 @@ public class AccountService : IAccountService
             FirstName = model.FirstName,
             LastName = model.LastName,
             Email = model.Email,
-            Password = await _passwordEncryptionService.EncryptAsync(model.Password),
+            Password = _passwordEncryptionService.HashPassword(await _passwordEncryptionService.EncryptAsync(model.Password)),
         };
 
         await _candidateRepository.AddAsync(user);
@@ -42,6 +42,7 @@ public class AccountService : IAccountService
 
     public async Task<User> LoginAsync(LoginDto model)
     {
+        Console.WriteLine(await _passwordEncryptionService.EncryptAsync("https://fontawesome.com/search?q=change&o=r&ic=free&s=solid&ip=classic"));
         var user = await _candidateRepository.GetByEmailAsync(model.Email);
         if (user == null)
         {
@@ -49,7 +50,7 @@ public class AccountService : IAccountService
             throw new UserNotFoundException(model.Email);
         }
 
-        var inEncryptedPassword = await _passwordEncryptionService.EncryptAsync(model.Password);
+        var inEncryptedPassword = _passwordEncryptionService.HashPassword(await _passwordEncryptionService.EncryptAsync(model.Password));
         if (user.Password != inEncryptedPassword)
         {
             _logger.LogWarning("Invalid password for user with email {Email}.", user.Email);
@@ -68,13 +69,13 @@ public class AccountService : IAccountService
     public async Task<bool> ChangePasswordAsync(Guid UserId, ResetPasswordDto resetPasswordViewModel)
     {
         var user = await _candidateRepository.GetByIdAsync(UserId) ?? throw new Exception("User not found.");
-        var inEncryptedPassword = await _passwordEncryptionService.EncryptAsync(resetPasswordViewModel.CurrentPassword);
+        var inEncryptedPassword = _passwordEncryptionService.HashPassword(await _passwordEncryptionService.EncryptAsync(resetPasswordViewModel.CurrentPassword));
         if (user.Password != inEncryptedPassword)
         {
             _logger.LogWarning("Invalid current password for user with ID {UserId}.", UserId);
             throw new InvalidCurrentPasswordException(user.Email);
         }
-        var inEncryptedNewPassword = await _passwordEncryptionService.EncryptAsync(resetPasswordViewModel.NewPassword);
+        var inEncryptedNewPassword = _passwordEncryptionService.HashPassword(await _passwordEncryptionService.EncryptAsync(resetPasswordViewModel.NewPassword));
         user.Password = inEncryptedNewPassword;
         await _candidateRepository.UpdateAsync(user);
         _logger.LogInformation("Password changed successfully for user with ID {UserId}.", UserId);
