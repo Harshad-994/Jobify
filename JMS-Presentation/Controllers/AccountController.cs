@@ -5,6 +5,7 @@ using DAL.Data.Enums;
 using JMS_Presentation.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
+using Shared.Models;
 
 namespace JMS_Presentation.Controllers;
 
@@ -82,13 +83,9 @@ public class AccountController : Controller
 
         var role = user.Role;
 
-        TempData["FromLogin"] = true;
-        return role switch
-        {
-            (int)Role.Admin => RedirectToAction("AdminDashboard", "Home"),
-            (int)Role.Candidate => RedirectToAction("CandidateDashboard", "Home"),
-            _ => View()
-        };
+        TempData["SuccessMessage"] = "You have successfully logged in.";
+        var redirectUrl = (int)Role.Admin == role ? Url.Action("AdminDashboard", "Home") : Url.Action("CandidateDashboard", "Home");
+        return Ok(new SuccessResponce { Success = true, Message = "Login successful.", RedirectUrl = redirectUrl });
     }
 
     [HttpGet]
@@ -112,7 +109,7 @@ public class AccountController : Controller
             Password = model.Password,
         };
         var user = await _accountService.RegisterAsync(registerDto);
-        return RedirectToAction("Login");
+        return Ok(new SuccessResponce { Success = true, Message = "Registration successful.", RedirectUrl = Url.Action("Login", "Account") });
     }
 
     [HttpPost]
@@ -120,7 +117,7 @@ public class AccountController : Controller
     {
         Response.Cookies.Delete("jwt");
         Response.Cookies.Delete("refreshToken");
-        TempData["FromLogout"] = true;
+        TempData["SuccessMessage"] = "You have successfully logged out.";
         return RedirectToAction("Login", "Account");
     }
 }

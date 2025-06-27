@@ -34,7 +34,6 @@ public class CandidateService : ICandidateService
         }
         var candidateProfileDto = new CandidateProfileDto
         {
-
             Id = candidateEntity.Id,
             FirstName = candidateEntity.FirstName,
             LastName = candidateEntity.LastName,
@@ -84,10 +83,6 @@ public class CandidateService : ICandidateService
         {
             var uploadedUrl = await _cloudinaryService.UploadResumeFile(candidateProfile.Resume);
             candidateEntity.ResumeUrl = await _passwordEncryptionService.EncryptAsync(uploadedUrl);
-        }
-        else
-        {
-            candidateEntity.ResumeUrl = candidateProfile.ResumeUrl;
         }
 
         candidateEntity.FirstName = candidateProfile.FirstName;

@@ -27,7 +27,7 @@ public class JobService : IJobService
             _logger.LogWarning("Job posting cannot be null.");
             throw new ArgumentNullException(nameof(jobPosting));
         }
-        if (!(jobPosting.ClosingDate >= DateOnly.FromDateTime(DateTime.UtcNow)))
+        if (!(jobPosting.ClosingDate > DateOnly.FromDateTime(DateTime.UtcNow)))
         {
             _logger.LogWarning("Job closing date can't be in the past.");
             throw new InvalidJobClosingDateException(jobPosting.ClosingDate);
@@ -72,13 +72,13 @@ public class JobService : IJobService
         //     throw new JobPostingNotActiveException(jobPosting.Id);
         // }
 
-        if (!(existingJobPosting.ClosingDate >= DateOnly.FromDateTime(DateTime.UtcNow)) || jobPosting.ClosingDate < DateOnly.FromDateTime(jobPosting.CreatedAt))
+        if (!(jobPosting.ClosingDate > DateOnly.FromDateTime(DateTime.UtcNow)) || jobPosting.ClosingDate < DateOnly.FromDateTime(jobPosting.CreatedAt))
         {
             _logger.LogWarning("Job closing date can't be in the past.");
             throw new InvalidJobClosingDateException(existingJobPosting.ClosingDate);
         }
 
-        if (DateOnly.FromDateTime(DateTime.UtcNow) >= jobPosting.ClosingDate)
+        if (DateOnly.FromDateTime(DateTime.UtcNow) > jobPosting.ClosingDate)
         {
             _logger.LogWarning("Job posting has already closed.");
             throw new JobPostingExpiredException(jobPosting.Id, jobPosting.ClosingDate);
@@ -183,13 +183,17 @@ public class JobService : IJobService
                 j.Title.ToLower().Contains(term) ||
                 j.Description.ToLower().Contains(term) ||
                 j.CompanyName.ToLower().Contains(term) ||
-                j.Location.ToLower().Contains(term) && j.IsActive && !j.IsDeleted);
+                j.Location.ToLower().Contains(term));
         }
 
         if (filter.CategoryId != null)
             query = query.Where(j => j.CategoryId == filter.CategoryId.Value);
         if (filter.EmploymentType != null)
             query = query.Where(j => j.EmploymentType == filter.EmploymentType.Value);
+        if (filter.IsActive == true)
+            query = query.Where(j => j.IsActive);
+        if (filter.ClosingDateEnd != null)
+            query = query.Where(j => j.ClosingDate >= DateOnly.FromDateTime(filter.ClosingDateEnd.Value));
 
         var totalCount = await query.CountAsync();
 

@@ -15,12 +15,14 @@ public class JobApplicationService : IJobApplicationService
     private readonly IJobApplicationRepository _jobApplicationRepository;
     private readonly IJobRepository _jobRepository;
     private readonly ICandidateRepository _userRepository;
-    public JobApplicationService(ILogger<JobApplicationService> logger, IJobApplicationRepository jobApplicationRepository, IJobRepository jobRepository, ICandidateRepository candidateRepository)
+    private readonly IPasswordEncryptionService _passwordEncryptionService;
+    public JobApplicationService(ILogger<JobApplicationService> logger, IJobApplicationRepository jobApplicationRepository, IJobRepository jobRepository, ICandidateRepository candidateRepository, IPasswordEncryptionService passwordEncryptionService)
     {
         _logger = logger;
         _jobApplicationRepository = jobApplicationRepository;
         _jobRepository = jobRepository;
         _userRepository = candidateRepository;
+        _passwordEncryptionService = passwordEncryptionService;
     }
 
     public async Task<bool> ApplyAsync(JobApplicationDto jobApplication)
@@ -51,7 +53,7 @@ public class JobApplicationService : IJobApplicationService
             throw new JobPostingNotActiveException(jobApplication.JobPostingId);
         }
 
-        if (DateOnly.FromDateTime(DateTime.UtcNow) >= jobPostingEntity.ClosingDate)
+        if (DateOnly.FromDateTime(DateTime.UtcNow) > jobPostingEntity.ClosingDate)
         {
             _logger.LogWarning("Job posting with id {JobId} has already closed.", jobApplication.JobPostingId);
             throw new JobPostingExpiredException(jobApplication.JobPostingId, jobPostingEntity.ClosingDate);
@@ -120,18 +122,27 @@ public class JobApplicationService : IJobApplicationService
         return true;
     }
 
-    public async Task<bool> DeleteApplicationAsync(Guid applicationId)
+    public async Task<JobApplicationDto> DeleteApplicationAsync(Guid applicationId)
     {
-        var jobApplicationEntity = await _jobApplicationRepository.GetByIdAsync(applicationId);
+        var jobApplicationEntity = await _jobApplicationRepository.GetAll().Where(a => a.Id == applicationId).Include(a => a.JobPosting).SingleOrDefaultAsync();
+
         if (jobApplicationEntity == null)
         {
             _logger.LogWarning("Job application {ApplicationId} not found for deletion", applicationId);
             throw new JobApplicationNotFoundException(applicationId);
         }
 
+        var jobApplication = new JobApplicationDto
+        {
+            Id = jobApplicationEntity.Id,
+            UserId = jobApplicationEntity.UserId,
+            CompanyName = jobApplicationEntity.JobPosting.CompanyName,
+            Title = jobApplicationEntity.JobPosting.Title
+        };
+
         await _jobApplicationRepository.DeleteAsync(jobApplicationEntity);
         _logger.LogInformation("Job application with id {ApplicationId} deleted successfully.", applicationId);
-        return true;
+        return jobApplication;
     }
 
     public async Task<PaginationResponseDto<JobApplicationDto>> GetJobApplicationsAsync(JobApplicationFilterDto filter)
@@ -211,7 +222,7 @@ public class JobApplicationService : IJobApplicationService
             AppliedAt = jobApplicationEntity.AppliedAt,
             UpdatedAt = jobApplicationEntity.UpdatedAt,
             ApplicationStatus = jobApplicationEntity.ApplicationStatus,
-            ResumeUrl = jobApplicationEntity.User.ResumeUrl
+            ResumeUrl = !string.IsNullOrEmpty(jobApplicationEntity.User.ResumeUrl) ? _passwordEncryptionService.DecryptAsync(jobApplicationEntity.User.ResumeUrl).Result : null
         };
         return jobApplicationDto;
     }

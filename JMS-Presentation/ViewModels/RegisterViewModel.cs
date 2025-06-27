@@ -4,17 +4,17 @@ namespace JMS_Presentation.ViewModels;
 
 public class RegisterViewModel
 {
-    [Required(ErrorMessage = "First Name is required.")]
-    [MaxLength(100)]
+    [Required(ErrorMessage = "Firstname is required.")]
+    [MaxLength(100,ErrorMessage = "First Name cannot exceed 100 characters.")]
     public string FirstName { get; set; } = null!;
 
     [Required(ErrorMessage = "Last Name is required.")]
-    [MaxLength(100)]
+    [MaxLength(100,ErrorMessage ="Lastname cannot exceed 100 characters.")]
     public string LastName { get; set; } = null!;
 
     [Required(ErrorMessage = "Email is required.")]
     [RegularExpression(@"^[0-9a-zA-Z.-]+@[a-zA-Z-.0-9]+\.[a-zA-Z]{2,5}$", ErrorMessage = "Please enter email in correct format.")]
-    [MaxLength(255)]
+    [MaxLength(255,ErrorMessage = "Email cannot exceed 255 characters.")]
     public string Email { get; set; } = null!;
 
     [Required(ErrorMessage = "Password is required.")]

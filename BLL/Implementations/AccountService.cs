@@ -42,7 +42,6 @@ public class AccountService : IAccountService
 
     public async Task<User> LoginAsync(LoginDto model)
     {
-        Console.WriteLine(await _passwordEncryptionService.EncryptAsync("https://fontawesome.com/search?q=change&o=r&ic=free&s=solid&ip=classic"));
         var user = await _candidateRepository.GetByEmailAsync(model.Email);
         if (user == null)
         {

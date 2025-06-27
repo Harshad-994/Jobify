@@ -4,9 +4,18 @@
 @model JobPostingViewModel;
 
 @{
-    Layout = "_AdminLayout";
+    Layout = User.FindFirst(ClaimTypes.Role)?.Value == Role.Admin.ToString() ? "_AdminLayout" : "_CandidateLayout";
     ViewData["Title"] = "Job Details";
 }
+
+@* modal for applying for a job*@
+<div class="modal fade" id="applyJobModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="applyJobFormContainer">
+            
+        </div>
+    </div>
+</div>
 
 <h2 class="primaryText">Job Information</h2>
 
@@ -16,7 +25,7 @@
     <span class="secondaryText">@Model.Description</span>
 </div>
 
-<div class="job-card mt-3 rounded-3 p-3 p-md-4">
+<div class="job-card mt-3 rounded-3 p-3 p-md-4" data-id="@Model.Id">
     <div class="job-info-item">
         <div class="job-info-label">Company</div>
         <div class="job-info-value">
@@ -60,7 +69,55 @@
 @if (User.FindFirst(ClaimTypes.Role)?.Value != Role.Admin.ToString())
 {
         <div class="mt-4">
-            <button class="btn btn-apply">Apply Now</button>
+            <button class="btn primaryBtn applyBtn" data-bs-target="#applyJobModal" data-bs-toggle="modal">Apply Now</button>
         </div>
 }
 </div>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+
+            $(document).on('click', '.applyBtn', function () {
+                var jobId = $(this).closest('.job-card').data('id');
+                $.ajax({
+                    url: '@Url.Action("GetJobApplicationForm", "JobApplication")',
+                    type: 'GET',
+                    data: { jobId: jobId },
+                    success: function (data) {
+                        $('#applyJobFormContainer').html(data);
+                        },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj?.message);
+                    }
+                });
+            });
+
+            $(document).on('submit', '#applyJobForm', function (e) {
+                e.preventDefault();
+                var formData = new FormData(this);
+                $.ajax({
+                    url: '@Url.Action("ApplyForJob", "JobApplication")',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj?.message);
+                    }
+                });
+                $('#applyJobModal').modal('hide');
+            });
+
+        });
+    </script>
+
+}

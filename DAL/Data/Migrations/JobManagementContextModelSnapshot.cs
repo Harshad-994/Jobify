@@ -157,6 +157,48 @@ namespace DAL.Data.Migrations
                     b.ToTable("JobPostings");
                 });
 
+            modelBuilder.Entity("DAL.Data.Models.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsRead")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("DAL.Data.Models.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -242,6 +284,17 @@ namespace DAL.Data.Migrations
                     b.Navigation("JobCategory");
                 });
 
+            modelBuilder.Entity("DAL.Data.Models.Notification", b =>
+                {
+                    b.HasOne("DAL.Data.Models.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DAL.Data.Models.JobCategory", b =>
                 {
                     b.Navigation("JobPostings");
@@ -255,6 +308,8 @@ namespace DAL.Data.Migrations
             modelBuilder.Entity("DAL.Data.Models.User", b =>
                 {
                     b.Navigation("JobApplications");
+
+                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }

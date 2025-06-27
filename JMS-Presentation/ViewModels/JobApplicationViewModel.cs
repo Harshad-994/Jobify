@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace JMS_Presentation.ViewModels;
 
 public class JobApplicationViewModel
@@ -9,6 +11,7 @@ public class JobApplicationViewModel
     public string? LastName { get; set; }
     public string? CompanyName { get; set; }
     public Guid JobPostingId { get; set; }
+    [MaxLength(2000, ErrorMessage = "Cover letter cannot exceed 2000 characters.")]
     public string? CoverLetter { get; set; }
     public string? ResumeUrl { get; set; }
     public DateTime AppliedAt { get; set; }

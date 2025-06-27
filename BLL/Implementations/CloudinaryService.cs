@@ -43,71 +43,87 @@ public class CloudinaryService : ICloudinaryService
             _logger.LogWarning("File type is not PDF.");
             throw new InvalidFileTypeException(file.FileName);
         }
-        var cloudinary = new Cloudinary(new Account(
-        cloudName,
-        apiKey,
-        apiSecret
-        ));
-
-        using var stream = file.OpenReadStream();
-        var uploadParams = new RawUploadParams()
+        try
         {
-            File = new FileDescription(file.FileName, stream)
-        };
+            var cloudinary = new Cloudinary(new Account(
+            cloudName,
+            apiKey,
+            apiSecret
+            ));
 
-        var uploadResult = await cloudinary.UploadAsync(uploadParams);
+            using var stream = file.OpenReadStream();
+            var uploadParams = new RawUploadParams()
+            {
+                File = new FileDescription(file.FileName, stream)
+            };
 
-        if (uploadResult.Error != null)
-        {
-            _logger.LogWarning("Cloudinary upload failed. Error: {error}", uploadResult.Error.Message);
-            throw new CloudinarySystemException("upload", new Exception(uploadResult.Error.Message));
+            var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+            if (uploadResult.Error != null)
+            {
+                _logger.LogWarning("Cloudinary upload failed. Error: {error}", uploadResult.Error.Message);
+                throw new Exception();
+            }
+            return uploadResult.SecureUrl.ToString();
         }
-        return uploadResult.SecureUrl.ToString();
+        catch (CloudinaryException)
+        {
+            throw;
+        }
+
 
     }
 
     public async Task<bool> DeleteFileBySecureUrlAsync(string secureUrl)
     {
-        if (string.IsNullOrWhiteSpace(secureUrl))
-            throw new InvalidCloudinaryFileUrlException(secureUrl);
-
-        var cloudinary = new Cloudinary(new Account(cloudName, apiKey, apiSecret));
-
-        var uploadIndex = secureUrl.IndexOf("/upload/");
-        if (uploadIndex == -1)
+        try
         {
-            _logger.LogWarning("Invalid file secure URL format.");
-            throw new InvalidCloudinaryFileUrlException(secureUrl);
+            if (string.IsNullOrWhiteSpace(secureUrl))
+                throw new InvalidCloudinaryFileUrlException(secureUrl);
+
+            var cloudinary = new Cloudinary(new Account(cloudName, apiKey, apiSecret));
+
+            var uploadIndex = secureUrl.IndexOf("/upload/");
+            if (uploadIndex == -1)
+            {
+                _logger.LogWarning("Invalid file secure URL format.");
+                throw new InvalidCloudinaryFileUrlException(secureUrl);
+            }
+
+            var pathWithVersionAndExt = secureUrl[(uploadIndex + "/upload/".Length)..];
+
+            var firstSlash = pathWithVersionAndExt.IndexOf('/');
+            if (firstSlash == -1)
+            {
+                _logger.LogWarning("Invalid file secure URL format.");
+                throw new Exception();
+            }
+
+            var pathWithExt = pathWithVersionAndExt[(firstSlash + 1)..];
+
+            var lastDot = pathWithExt.LastIndexOf('.');
+            if (lastDot == -1)
+            {
+                _logger.LogWarning("Invalid file secure URL format.");
+                throw new InvalidCloudinaryFileUrlException(secureUrl);
+            }
+
+            var publicId = pathWithExt[..lastDot];
+
+            var deletionParams = new DeletionParams(publicId)
+            {
+                ResourceType = ResourceType.Raw
+            };
+
+            var result = await cloudinary.DestroyAsync(deletionParams);
+
+            return result.Result == "ok";
+        }
+        catch (CloudinaryException)
+        {
+            throw;
         }
 
-        var pathWithVersionAndExt = secureUrl[(uploadIndex + "/upload/".Length)..];
-
-        var firstSlash = pathWithVersionAndExt.IndexOf('/');
-        if (firstSlash == -1)
-        {
-            _logger.LogWarning("Invalid file secure URL format.");
-            throw new InvalidCloudinaryFileUrlException(secureUrl);
-        }
-
-        var pathWithExt = pathWithVersionAndExt[(firstSlash + 1)..];
-
-        var lastDot = pathWithExt.LastIndexOf('.');
-        if (lastDot == -1)
-        {
-            _logger.LogWarning("Invalid file secure URL format.");
-            throw new InvalidCloudinaryFileUrlException(secureUrl);
-        }
-
-        var publicId = pathWithExt[..lastDot];
-
-        var deletionParams = new DeletionParams(publicId)
-        {
-            ResourceType = ResourceType.Raw
-        };
-
-        var result = await cloudinary.DestroyAsync(deletionParams);
-
-        return result.Result == "ok";
     }
 
 }

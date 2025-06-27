@@ -42,7 +42,6 @@ function formatDateOnly(dateStr) {
   return `${day}-${month}-${year}`;
 }
 
-
 function timeAgoDateFormat(dateInput) {
   const now = new Date();
   const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
@@ -68,4 +67,8 @@ function timeAgoDateFormat(dateInput) {
   }
   const months = Math.floor(diffDay / 30);
   return `${months} month${months === 1 ? "" : "s"} ago`;
+}
+
+function isNullEmptyOrWhitespace(str) {
+  return str === null || str.trim().length === 0;
 }

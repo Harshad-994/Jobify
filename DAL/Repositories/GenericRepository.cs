@@ -14,7 +14,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         table = context.Set<T>();
     }
 
-    public async Task AddAsync(T entity)
+    public async Task<T> AddAsync(T entity)
     {
         try
         {
@@ -22,8 +22,9 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             {
                 throw new ArgumentNullException(nameof(entity), "Entity cannot be null.");
             }
-            await table.AddAsync(entity);
+            var addedEntity = await table.AddAsync(entity);
             await SaveChangesAsync();
+            return addedEntity.Entity;
         }
         catch (Exception)
         {

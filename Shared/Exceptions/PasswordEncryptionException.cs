@@ -36,6 +36,14 @@ public class PasswordEncryptionFailedException : PasswordEncryptionException
     }
 }
 
+public class DecryptionFailedException : PasswordEncryptionException
+{
+    public DecryptionFailedException(Exception innerException)
+        : base("Decryption failed. Please try again.", "DECRYPTION_FAILED", innerException)
+    {
+    }
+}
+
 public class PasswordHashingException : PasswordEncryptionException
 {
     public PasswordHashingException(Exception innerException)

@@ -114,7 +114,7 @@
                     processData: false,
                     success: function (response) {
                         if (response?.success) {
-                            successToast(response?.message);
+                            window.location.href = response?.redirectUrl;
                         }
                     },
                     error: function (xhr, status, error) {

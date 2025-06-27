@@ -16,4 +16,5 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public virtual ICollection<JobApplication> JobApplications { get; set; } = new List<JobApplication>();
+    public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 }

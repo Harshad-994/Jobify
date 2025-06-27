@@ -99,18 +99,6 @@ public class CategoryService : ICategoryService
     //     }
     // }
 
-    public List<JobCategoryDto> GetAll()
-    {
-        var categories = _categoryRepository.GetAll();
-        var categoryDtos = categories.Select(c => new JobCategoryDto
-        {
-            Id = c.Id,
-            Name = c.Name,
-            Description = c.Description
-        }).ToList();
-        return categoryDtos;
-    }
-
     public async Task<PaginationResponseDto<JobCategoryDto>> GetJobCategoriesAsync(JobCategoryFilterDto filter)
     {
         var query = _categoryRepository.GetAll();
@@ -125,8 +113,8 @@ public class CategoryService : ICategoryService
 
         var items = await query
             .OrderByDescending(c => c.CreatedAt)
-            .Skip((filter.Page - 1) * filter.PageSize)
-            .Take(filter.PageSize)
+            .Skip(filter.PageSize != 0 ? (filter.Page - 1) * filter.PageSize : 0)
+            .Take(filter.PageSize != 0 ? filter.PageSize : totalCount)
             .Select(c => new JobCategoryDto
             {
                 Id = c.Id,
@@ -134,7 +122,7 @@ public class CategoryService : ICategoryService
                 Description = c.Description,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
-                TotalNoOfJobs = _jobRepository.GetAll().Where(j => j.Id == c.Id).Count(),
+                TotalNoOfJobs = _jobRepository.GetAll().Where(j => j.CategoryId == c.Id).Count(),
             })
             .ToListAsync();
 
@@ -165,7 +153,7 @@ public class CategoryService : ICategoryService
             Description = category.Description,
             CreatedAt = category.CreatedAt,
             UpdatedAt = category.UpdatedAt,
-            TotalNoOfJobs = _jobRepository.GetAll().Where(j => j.Id == category.Id).Count(),
+            TotalNoOfJobs = _jobRepository.GetAll().Where(j => j.CategoryId == category.Id).Count(),
         };
     }
 }

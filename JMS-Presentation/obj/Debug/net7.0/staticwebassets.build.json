@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "+wrZZWZsNwQooIv37bEaLM/JmLLrC5R/xKk48Bs0ByA=",
+  "Hash": "Exdd2TAulI1XH1uOn1qe2yNGZGOpDkv0fLfDxloSBp4=",
   "Source": "JMS-Presentation",
   "BasePath": "_content/JMS-Presentation",
   "Mode": "Default",
@@ -219,6 +219,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\site.js"
+    },
+    {
+      "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\js\\vendor\\signalr.js",
+      "SourceId": "JMS-Presentation",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\",
+      "BasePath": "_content/JMS-Presentation",
+      "RelativePath": "js/vendor/signalr.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\vendor\\signalr.js"
     },
     {
       "Identity": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\js\\vendor\\Toastify.js",

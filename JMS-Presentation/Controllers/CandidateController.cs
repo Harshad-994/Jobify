@@ -1,10 +1,14 @@
 using BLL.Interfaces;
+using DAL.Data.Enums;
 using JMS_Presentation.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
+using Shared.Models;
 
 namespace JMS_Presentation.Controllers;
 
+[Authorize]
 public class CandidateController : Controller
 {
     private readonly ICandidateService _candidateService;
@@ -14,6 +18,7 @@ public class CandidateController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> AllCandidates(CandidateFilterDto candidateFilterDto)
     {
         var candidatesDto = await _candidateService.GetCandidatesAsync(candidateFilterDto);
@@ -33,6 +38,7 @@ public class CandidateController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<PaginationResponseDto<CandidateProfileViewModel>> GetAllCandidates(CandidateFilterDto candidateFilterDto)
     {
         var candidatesDto = await _candidateService.GetCandidatesAsync(candidateFilterDto);
@@ -61,13 +67,15 @@ public class CandidateController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> ToggleCandidateActiveStatus(Guid candidateId)
     {
         var candidateEntity = await _candidateService.ToggleCandidateStatus(candidateId);
-        return Ok(new { Success = true, Message = "Candidate status toggled successfully" });
+        return Ok(new SuccessResponce { Success = true, Message = "Candidate status toggled successfully" });
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Candidate))]
     public async Task<IActionResult> GetCandidateProfile(Guid candidateId)
     {
         var candidateProfile = await _candidateService.GetCandidateProfile(candidateId);
@@ -75,6 +83,7 @@ public class CandidateController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> CandidateDetails(Guid candidateId)
     {
         var candidateProfileDto = await _candidateService.GetCandidateProfile(candidateId);
@@ -107,7 +116,7 @@ public class CandidateController : Controller
             JobApplicationStatusName = jobApplication.JobApplicationStatusName
         }).ToList();
         candidateProfile.JobApplications = jobApplications;
-        
+
         return View("CandidateDetails", candidateProfile);
     }
 

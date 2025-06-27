@@ -64,6 +64,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSm9iQXBwbGljYXRpb25cQWxsSm9iQXBwbGljYXRpb25zRm9yQ2FuZGlkYXRlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Job-Management-System/JMS-Presentation/Views/JobApplication/_ApplyForm.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSm9iQXBwbGljYXRpb25cX0FwcGx5Rm9ybS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Job-Management-System/JMS-Presentation/Views/JobCategory/AddEditCategory.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSm9iQ2F0ZWdvcnlcQWRkRWRpdENhdGVnb3J5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -84,8 +88,8 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSm9iUG9zdGluZ1xBbGxKb2JQb3N0aW5ncy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/Job-Management-System/JMS-Presentation/Views/JobPosting/CandidatesApplication.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSm9iUG9zdGluZ1xDYW5kaWRhdGVzQXBwbGljYXRpb24uY3NodG1s
+[D:/Job-Management-System/JMS-Presentation/Views/JobPosting/AllJobPostingsForCandidate.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSm9iUG9zdGluZ1xBbGxKb2JQb3N0aW5nc0ZvckNhbmRpZGF0ZS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Job-Management-System/JMS-Presentation/Views/JobPosting/JobDetails.cshtml]

@@ -18,7 +18,7 @@
         </div>
 
         <div id="register-form" class="form-content active">
-            <form asp-action="Register" method="post">
+            <form class="registerForm" method="post">
                 <div class="row">
                     <div class="form-group">
                         <label class="form-label">First Name</label>
@@ -52,7 +52,7 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
-                    <input required type="checkbox" class="" id="terms" />
+                    <input required type="checkbox" class="" id="terms" name="terms" />
                     <label class="" for="terms">I agree to the Terms and conditions.</label>
                 </div>
 
@@ -67,13 +67,36 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
-        function switchTab(tab) {
-            $(".authTab").removeClass("active");
-            $(".form-content").removeClass("active");
+        $(document).ready(function () {
 
-            $(event.target).addClass("active");
+            $('.registerForm').on('submit', function (e) {
+                e.preventDefault();
+                if (!$(this).valid()) {
+                    return;
+                }
+                var formData = new FormData(this);
+                $.ajax({
+                    url: `@Url.Action("Register", "Account")`,
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response?.success) {
+                            window.location.href = response?.redirectUrl;
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            });
 
-            $("#" + tab + "-form").addClass("active");
-        }
+        });
     </script>
 }

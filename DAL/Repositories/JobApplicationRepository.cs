@@ -21,7 +21,7 @@ public class JobApplicationRepository : GenericRepository<JobApplication>, IJobA
             {
                 throw new Exception("Job ID and candidate ID cannot be empty.");
             }
-            return await _context.JobApplications.AnyAsync(j => j.Id == jobId && j.UserId == candidateId);
+            return await _context.JobApplications.AnyAsync(j => j.JobPostingId == jobId && j.UserId == candidateId);
         }
         catch (Exception)
         {
@@ -37,7 +37,7 @@ public class JobApplicationRepository : GenericRepository<JobApplication>, IJobA
             {
                 throw new Exception("Job ID cannot be empty.");
             }
-            return await _context.JobApplications.CountAsync(j => j.Id == jobId);
+            return await _context.JobApplications.CountAsync(j => j.JobPostingId == jobId);
         }
         catch (Exception)
         {

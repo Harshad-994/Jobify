@@ -18,7 +18,7 @@
         </div>
 
         <div id="login-form" class="form-content active">
-            <form method="post" asp-action="Login">
+            <form class="loginForm" method="post">
                 <div class="form-group">
                     <label class="form-label">Email</label>
                     <input asp-for="Email" class="form-control" placeholder="Enter your email" />
@@ -36,7 +36,7 @@
                     <label class="form-check-label" for="remember">Remember me</label>
                 </div>
 
-                <button class="signInButton">Sign In</button>
+                <button type="submit" class="signInButton">Sign In</button>
 
                 <div class="forgot-password">
                     <a href="#">Forgot your password?</a>
@@ -51,18 +51,35 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+        $(document).ready(function () {
 
-        if (Boolean(`@TempData["FromLogout"]`.toString())) {
-            successToast("You have successfully logged out.");
-        }
-
-        function switchTab(tab) {
-            $(".authTab").removeClass("active");
-            $(".form-content").removeClass("active");
-
-            $(event.target).addClass("active");
-
-            $("#" + tab + "-form").addClass("active");
-        }
+            $('.loginForm').on('submit', function (e) {
+                e.preventDefault();
+                if (!$(this).valid()) {
+                    return;
+                }
+                var formData = new FormData(this);
+                $.ajax({
+                    url: `@Url.Action("Login", "Account")`,
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response?.success) {
+                            window.location.href = response?.redirectUrl;
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            });
+        });
     </script>
 }

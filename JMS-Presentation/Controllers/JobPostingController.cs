@@ -1,9 +1,13 @@
+using System.Threading.Tasks;
 using BLL.Interfaces;
+using DAL.Data.Enums;
 using DAL.Data.Models;
 using JMS_Presentation.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Shared.DTOs;
+using Shared.Models;
 
 namespace JMS_Presentation.Controllers;
 
@@ -18,14 +22,16 @@ public class JobPostingController : Controller
     }
 
     [HttpGet]
-    public IActionResult AddJobPosting()
+    [Authorize(Roles = nameof(Role.Admin))]
+    public async Task<IActionResult> AddJobPosting()
     {
-        var categories = _categoryService.GetAll();
-        ViewBag.Categories = new SelectList(categories, "Id", "Name");
+        var categories = await _categoryService.GetJobCategoriesAsync(new JobCategoryFilterDto() { PageSize = 0 });
+        ViewBag.Categories = new SelectList(categories.Items, "Id", "Name");
         return View("AddEditJobPosting", new JobPostingViewModel { });
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> AddJobPosting(JobPostingViewModel jobPostingViewModel)
     {
         if (!ModelState.IsValid)
@@ -47,11 +53,13 @@ public class JobPostingController : Controller
             UpdatedAt = DateTime.UtcNow
         };
         await _jobService.CreateAsync(jobPosting);
-        return Ok(new { Success = true, Message = "Job posting created successfully." });
+        TempData["SuccessMessage"] = "Job posting created successfully.";
+        return Ok(new SuccessResponce { Success = true, Message = "Job posting created successfully.", RedirectUrl = Url.Action("AllJobPostings") });
     }
 
     [HttpGet]
-    public IActionResult EditJobPosting(Guid jobId)
+    [Authorize(Roles = nameof(Role.Admin))]
+    public async Task<IActionResult> EditJobPosting(Guid jobId)
     {
         var jobPostingDto = _jobService.GetById(jobId);
         var jobPosting = new JobPostingViewModel
@@ -69,13 +77,14 @@ public class JobPostingController : Controller
             CreatedAt = jobPostingDto.CreatedAt,
             UpdatedAt = jobPostingDto.UpdatedAt
         };
-        var categories = _categoryService.GetAll();
-        ViewBag.Categories = new SelectList(categories, "Id", "Name");
+        var categories = await _categoryService.GetJobCategoriesAsync(new JobCategoryFilterDto() { PageSize = 0 });
+        ViewBag.Categories = new SelectList(categories.Items, "Id", "Name");
         ViewBag.JobPosting = jobPosting;
         return View("AddEditJobPosting", jobPosting);
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> EditJobPosting(JobPostingViewModel jobPostingViewModel)
     {
         if (!ModelState.IsValid)
@@ -96,10 +105,12 @@ public class JobPostingController : Controller
             IsActive = jobPostingViewModel.IsActive,
         };
         await _jobService.UpdateAsync(jobPosting);
-        return Ok(new { Success = true, Message = "Job posting updated successfully." });
+        TempData["SuccessMessage"] = "Job posting updated successfully.";
+        return Ok(new SuccessResponce { Success = true, Message = "Job posting updated successfully.", RedirectUrl = Url.Action("AllJobPostings") });
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> AllJobPostings(JobPostingFilterDto jobPostingFilterDto)
     {
         var jobPostingsDto = await _jobService.GetJobPostingsAsync(jobPostingFilterDto);
@@ -123,6 +134,7 @@ public class JobPostingController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin) + "," + nameof(Role.Candidate))]
     public async Task<PaginationResponseDto<JobPostingViewModel>> GetAllJobPostings(JobPostingFilterDto jobPostingFilterDto)
     {
         var jobPostingsDto = await _jobService.GetJobPostingsAsync(jobPostingFilterDto);
@@ -154,13 +166,15 @@ public class JobPostingController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> DeleteJobPosting(Guid jobId)
     {
         await _jobService.DeleteAsync(jobId);
-        return Ok(new { Success = true, Message = "Job posting deleted successfully." });
+        return Ok(new SuccessResponce { Success = true, Message = "Job posting deleted successfully." });
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin) + "," + nameof(Role.Candidate))]
     public IActionResult JobPostingDetails(Guid jobId)
     {
         var jobPostingDto = _jobService.GetById(jobId);
@@ -181,5 +195,35 @@ public class JobPostingController : Controller
             UpdatedAt = jobPostingDto.UpdatedAt
         };
         return View("JobDetails", jobPosting);
+    }
+
+    [HttpGet]
+    [Authorize(Roles = nameof(Role.Candidate))]
+    public async Task<IActionResult> JobPostings(JobPostingFilterDto jobPostingFilterDto)
+    {
+        jobPostingFilterDto.IsActive = true;
+        jobPostingFilterDto.ClosingDateEnd = DateTime.UtcNow;
+        ViewBag.CategoryId = jobPostingFilterDto.CategoryId;
+
+        var categories = await _categoryService.GetJobCategoriesAsync(new JobCategoryFilterDto() { PageSize = 0 });
+        ViewBag.Categories = new SelectList(categories.Items, "Id", "Name");
+        var jobPostingsDto = await _jobService.GetJobPostingsAsync(jobPostingFilterDto);
+        var jobPostings = jobPostingsDto.Items.Select(j => new JobPostingViewModel
+        {
+            Id = j.Id,
+            Title = j.Title,
+            Description = j.Description,
+            CompanyName = j.CompanyName,
+            Location = j.Location,
+            CategoryId = j.CategoryId,
+            CategoryName = j.CategoryName,
+            EmploymentType = j.EmploymentType,
+            SalaryRange = j.SalaryRange,
+            ClosingDate = j.ClosingDate,
+            IsActive = j.IsActive,
+            CreatedAt = j.CreatedAt,
+            UpdatedAt = j.UpdatedAt
+        }).ToList();
+        return View("AllJobPostingsForCandidate", jobPostings);
     }
 }

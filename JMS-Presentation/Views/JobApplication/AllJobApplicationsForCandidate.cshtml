@@ -5,6 +5,8 @@
 @{
     Layout = "_CandidateLayout";
     ViewData["Title"] = "Job Applications";
+    List<int> statusThatCanBeWithdrawn = new List<int>() { (int)ApplicationStatus.Applied,
+(int)ApplicationStatus.UnderReview };
 }
 
 @* modal for deleteing a application*@
@@ -22,6 +24,28 @@
             <div class="modal-footer">
                 <button type="button" class="btn secondaryBtn" data-bs-dismiss="modal">No</button>
                 <button type="button" class="btn primaryBtn confirmWithdraw">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* modal for application details*@
+<div class="modal fade" id="applicationInfoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h4 class="modal-title">Candidate Information</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body border-0">
+                <div class="d-flex gap-3 mb-3">
+                    <span class="secondaryText fw500 textNoWrap">Cover Letter</span>
+                    <textarea class="form-control coverLetter primaryText" disabled readonly rows="5"></textarea>
+                </div>
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <span class="secondaryText fw500 textNoWrap">Resume Url</span>
+                    <a class="resumeLink primaryText" target="_blank" href="">Click here to see resume</a>
+                </div>
             </div>
         </div>
     </div>
@@ -79,8 +103,16 @@
                             @application.CompanyName
                         </td>
                         <td>
-                            <button class="btn primaryBtn rounded-pill withdrawApplicationBtn"
-                                data-bs-target="#withdrawApplicationModal" data-bs-toggle="modal">withdraw</button>
+                            @if (statusThatCanBeWithdrawn.Contains(application.ApplicationStatus))
+                            {
+                                <button class="btn primaryBtn rounded-pill withdrawApplicationBtn"
+                                    data-bs-target="#withdrawApplicationModal" data-bs-toggle="modal">withdraw</button>
+                            }
+                            else
+                            {
+                                <span>Not available</span>
+                            }
+
                         </td>
                     </tr>
                 }
@@ -105,6 +137,7 @@
             var totalCount = 0;
             var searchText = "";
             var applicationStatus = null;
+            var statusThatCanBeWithdrawn = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(statusThatCanBeWithdrawn));
 
             function renderApplications(renderMarkup = true) {
                 var filter = {
@@ -136,25 +169,23 @@
                         }
                         applications.forEach(application => {
                             var row = `<tr data-id="${application.id}" data-statusId="${application.applicationStatus}">
-                                                                    <td>
-                                                                        <div class="d-flex align-items-center gap-2">
-                                                                            <i class="fas fa-file-alt"></i>
-                                                                            ${application.title}
-                                                                        </div>
-                                                                    </td>
-                                                                    <td>
-                                                                        ${formatDateTimeToDate(application.appliedAt)}
-                                                                    </td>
-                                                                    <td>
-                                                                        ${application.jobApplicationStatusName}
-                                                                    </td>
-                                                                    <td>
-                                                                        ${application.companyName}
-                                                                    </td>
-                                                                    <td>
-                                                                        <button class="btn primaryBtn rounded-pill withdrawApplicationBtn">withdraw</button>
-                                                                    </td>
-                                                                </tr>`;
+                                                                                                            <td>
+                                                                                                                <div class="d-flex align-items-center gap-2">
+                                                                                                                    <i class="fas fa-file-alt"></i>
+                                                                                                                    ${application.title}
+                                                                                                                </div>
+                                                                                                            </td>
+                                                                                                            <td>
+                                                                                                                ${formatDateTimeToDate(application.appliedAt)}
+                                                                                                            </td>
+                                                                                                            <td>
+                                                                                                                ${application.jobApplicationStatusName}
+                                                                                                            </td>
+                                                                                                            <td>
+                                                                                                                ${application.companyName}
+                                                                                                            </td>
+                                                                                                            ${statusThatCanBeWithdrawn.includes(application.applicationStatus) ? '<td><button class="btn primaryBtn rounded-pill withdrawApplicationBtn">withdraw</button></td>' : '<td><span>Not available</span></td>'}
+                                                                                                        </tr>`;
                             tableBody.append(row);
                         });
                     },
@@ -214,38 +245,39 @@
             })
 
             //to change application status
-            $(document).on('click', '.withdrawApplicationBtn', function () {
+            $(document).on('click', '.withdrawApplicationBtn', function (e) {
+                e.stopPropagation();
                 var applicationId = $(this).closest('tr').data('id');
                 $("#withdrawApplicationModal .confirmWithdraw").attr('applicationId', applicationId);
             });
 
             $(document).on('click', '#withdrawApplicationModal .confirmWithdraw', function () {
                 var applicationId = $(this).attr('applicationId');
-                var newStatus = @((int)ApplicationStatus.Withdrawn);
-                $.ajax({
-                    url: '@Url.Action("UpdateApplicationStatus", "JobApplication")',
-                    type: 'POST',
-                    data: { applicationId: applicationId, newStatus: newStatus },
-                    success: function (response) {
-                        if (response?.success) {
-                            successToast(response?.message);
-                            renderApplications();
+                @* var newStatus = @((int)ApplicationStatus.Withdrawn); *@
+                    $.ajax({
+                        url: '@Url.Action("WithdrawApplication", "JobApplication")',
+                        type: 'POST',
+                        data: { applicationId: applicationId },
+                        success: function (response) {
+                            if (response?.success) {
+                                successToast(response?.message);
+                                renderApplications();
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            try {
+                                var errorObj = JSON.parse(xhr.responseText);
+                                errorToast(errorObj.message);
+                            } catch (e) {
+                                errorToast("An unknown error occurred.");
+                            }
                         }
-                    },
-                    error: function (xhr, status, error) {
-                        try {
-                            var errorObj = JSON.parse(xhr.responseText);
-                            errorToast(errorObj.message);
-                        } catch (e) {
-                            errorToast("An unknown error occurred.");
-                        }
-                    }
-                });
+                    });
                 $("#withdrawApplicationModal").modal("hide");
             });
 
             //getting application information
-            @* $(document).on('click', '.applicationInfoBtn', function () {
+            $(document).on('click', '#applicationTable tr', function (e) {
                 var applicationId = $(this).closest('tr').data('id');
                 var params = {
                     applicationId: applicationId,
@@ -266,8 +298,9 @@
                     }
                 });
                 $("#applicationInfoModal").modal("show");
-            }); *@
+                e.stopPropagation();
+            });
 
-                });
+        });
     </script>
 }

@@ -44,6 +44,26 @@
         </div>
     </div>
 
+    @* notification modal *@
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content notification-modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">Notifications</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <ul class="list-group list-group-flush" id="notificationList">
+                        <li class="list-group-item">
+                            <p class="secondaryText text-center noNotificationMessage">No new notifications.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container-fluid p-0">
         <nav class="navbar navbar-expand-md navbar-light bg-white d-md-none border-bottom">
             <div class="container-fluid">
@@ -66,15 +86,21 @@
                         <a class="nav-link @(currentController == "Home" && currentAction == "CandidateDashboard" ? "active" : "")" " href="
                             @Url.Action("CandidateDashboard", "Home")"><i class=" fas
                             fa-th-large me-2"></i> Dashboard</a>
-                        <a class="nav-link @(currentController == "JobCategory" ? "active" : "")" " href="@Url.Action("AllCategories", "JobCategory")"><i class="fa-solid fa-shapes me-2"></i> Job Categories</a>
+                        <a class="nav-link @(currentController == "JobCategory" ? "active" : "")" " href="
+                            @Url.Action("AllJobCategories", "JobCategory")"><i class="fa-solid fa-shapes me-2"></i> Job
+                            Categories</a>
                         <a class="nav-link @(currentController == "JobPosting" ? "active" : "")" " href="
-                            @Url.Action("AllJobPostings", "JobPosting")"><i class="fas fa-briefcase me-2"></i>Search Jobs</a>
-                        <a class="nav-link @(currentController == "JobApplication" ? "active" : "")" " href="@Url.Action("AllJobApplicationsForCandidate", "JobApplication")"><i
+                            @Url.Action("JobPostings", "JobPosting")"><i class="fas fa-briefcase me-2"></i>Search
+                            Jobs</a>
+                        <a class="nav-link @(currentController == "JobApplication" ? "active" : "")" " href="
+                            @Url.Action("AllJobApplicationsForCandidate", "JobApplication")"><i
                                 class="fas fa-file-alt me-2"></i>My Applications</a>
                         <a class="nav-link @(currentController == "Home" && currentAction == "CandidateProfile" ? "active" : "")""
-                            href="@Url.Action("CandidateProfile", "Home", new { userId = User.FindFirst("UserId")?.Value })"><i
-                                class="fas fa-user me-2"></i>
+                            href=" @Url.Action("CandidateProfile", "Home")"><i class="fas fa-user me-2"></i>
                             Profile</a>
+                        <a class="nav-link notificationsBtn" data-bs-target="#notificationModal" data-bs-toggle="modal"
+                            href="#"><span class="notificationIcon"><i class="fa-solid fa-bell"></i></span>
+                            Notifications</a>
                         <a class="nav-link" data-bs-target="#logoutModal" data-bs-toggle="modal" href="#"><i
                                 class="fa-solid fa-arrow-right-from-bracket me-2"></i>
                             Logout</a>
@@ -100,7 +126,14 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"
+        integrity="sha512-7SRCYIJtR6F8ocwW7UxW6wGKqbSyqREDbfCORCbGLatU0iugBLwyOXpzhkPyHIFdBO0K2VCu57fvP2Twgx1o2A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="~/js/vendor/signalr.js"></script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
@@ -108,8 +141,118 @@
     <script src="~/js/pages/dashboard.js"></script>
 
     <script src="https://kit.fontawesome.com/9c4a1646d2.js" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+
+            if (`@TempData["SuccessMessage"]`) {
+                successToast(`@TempData["SuccessMessage"]`);
+            }
+
+            function appendNotification(notification) {
+                $(".noNotificationMessage").length > 0 ? $(".noNotificationMessage").closest("li").remove() : "";
+                var notificationElement = `
+                <li class="list-group-item notification-list-item" data-id="${notification?.id}"><div class="d-flex align-items-center justify-content-between gap-4"><div class="primaryText fw500">${notification?.title}</div><i class="fa-regular fa-circle-check dismissNotificationBtn"></i></div><div class="secondaryText">${notification?.message}</div><small class="mutedText">${timeAgoDateFormat(notification?.createdAt)}</small></li>`;
+                $("#notificationList").append(notificationElement);
+            }
+
+            $(document).on("click", ".dismissNotificationBtn", function () {
+                var notificationId = $(this).closest("li").data("id");
+                var dismissBtn = $(this);
+                var params = {
+                    notificationId: notificationId
+                }
+                $.ajax({
+                    url: `@Url.Action("MarkNotificationAsRead", "Notification")` + "?" + $.param(params),
+                    method: "POST",
+                    success: function () {
+                        dismissBtn.addClass("readNotification");
+                        checkAllNotificationsRead();
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            });
+
+            function renderNotifications() {
+                $.ajax({
+                    url: `@Url.Action("GetUnreadNotifications", "Notification")`,
+                    method: "GET",
+                    success: function (notifications) {
+                        if (notifications?.length === 0) {
+                            var noNotificationMessage = `<li class="list-group-item"><p class="secondaryText text-center noNotificationMessage">No new notifications.</p></li>`;
+                            $("#notificationList").append(noNotificationMessage);
+                        }
+                        notifications.forEach(function (notification) {
+                            appendNotification(notification);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            }
+
+            $(document).on("click", ".notificationsBtn", function () {
+                $("#notificationList").empty();
+                renderNotifications();
+            });
+
+            function checkAllNotificationsRead() {
+                var allNotificationsRead = true;
+                $(".dismissNotificationBtn").each(function () {
+                    if (!$(this).hasClass("readNotification")) {
+                        allNotificationsRead = false;
+                        return false;
+                    }
+                });
+                if (allNotificationsRead) {
+                    $(".notificationIcon").removeClass("unreadNotificationAlert");
+                }
+            }
+
+            //function to get the count of the unread notifications
+            function getUnreadNotificationCount() {
+                $.ajax({
+                    url: `@Url.Action("GetUnreadNotificationCount", "Notification")`,
+                    method: "GET",
+                    success: function (count) {
+                        if (count > 0) {
+                            $(".notificationIcon").addClass("unreadNotificationAlert");
+                        } else {
+                            $(".notificationIcon").removeClass("unreadNotificationAlert");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        try {
+                            var errorObj = JSON.parse(xhr.responseText);
+                            errorToast(errorObj.message);
+                        } catch (e) {
+                            errorToast("An unknown error occurred.");
+                        }
+                    }
+                });
+            }
+
+            getUnreadNotificationCount();
+
+            connection.on("ReceiveNotification", function (notification) {
+                appendNotification(notification);
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
-    
+
 </body>
 
 </html>

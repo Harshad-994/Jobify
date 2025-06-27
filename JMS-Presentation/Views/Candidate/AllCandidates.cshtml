@@ -50,7 +50,7 @@
                         @candidate.CreatedAt.ToString("dd-MM-yyyy")
                     </td>
                     <td>
-                        <a href="@candidate.ResumeUrl" target="_blank">View Resume</a>
+                        <a href="@candidate.ResumeUrl" target="_blank">@(string.IsNullOrEmpty(candidate.ResumeUrl) ? "No Resume" : "View Resume")</a>
                     </td>
                     <td>
                         <div class="form-check form-switch">
@@ -129,9 +129,10 @@
                                                                                                                                                                         ${formatDateTimeToDate(candidate.createdAt)}
                                                                                                                                                                     </td>
                                                                                                                                                                     <td>
-                                                                                                                                                                        <a href="${candidate.resumeUrl}" target="_blank">View Resume</a>
+                                                                                                                                                                        <a ${candidate.resumeUrl != null ? `href="${candidate.resumeUrl}"` : ""} target="_blank">
+${isNullEmptyOrWhitespace(candidate.resumeUrl) ? "No Resume" : "View Resume"}</a>
                                                                                                                                                                     </td>
-                                                                                                                                                                    <td>
+<td>
                                                                                                     <div class="form-check form-switch">
                                                                                                         <input class="form-check-input toggleCandidateActiveStatus" type="checkbox" role="switch" ${candidate.isActive ? "checked" : ""}>
                                                                                                     </div>

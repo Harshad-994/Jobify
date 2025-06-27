@@ -98,24 +98,40 @@ public class PasswordEncryptionService : IPasswordEncryptionService
 
     public string HashPassword(string password)
     {
-        if (password == null)
-            throw new ArgumentNullException(nameof(password));
-        return HashPassword(Encoding.UTF8.GetBytes(password));
+        try
+        {
+            if (password == null)
+                throw new ArgumentNullException(nameof(password));
+            return HashPassword(Encoding.UTF8.GetBytes(password));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Password hashing failed.", ex);
+            throw new PasswordHashingException(ex);
+        }
     }
 
 
 
     public async Task<string> DecryptAsync(string encryptedText)
     {
-        string passphrase = _salt;
-        using Aes aes = Aes.Create();
-        aes.Key = DeriveKeyFromSalt(passphrase);
-        aes.IV = IV;
-        byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
-        using MemoryStream input = new(encryptedBytes);
-        using CryptoStream cryptoStream = new(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
-        using MemoryStream output = new();
-        await cryptoStream.CopyToAsync(output);
-        return Encoding.Unicode.GetString(output.ToArray());
+        try
+        {
+            string passphrase = _salt;
+            using Aes aes = Aes.Create();
+            aes.Key = DeriveKeyFromSalt(passphrase);
+            aes.IV = IV;
+            byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+            using MemoryStream input = new(encryptedBytes);
+            using CryptoStream cryptoStream = new(input, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            using MemoryStream output = new();
+            await cryptoStream.CopyToAsync(output);
+            return Encoding.Unicode.GetString(output.ToArray());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("decryption failed.", ex);
+            throw new DecryptionFailedException(ex);
+        }
     }
 }

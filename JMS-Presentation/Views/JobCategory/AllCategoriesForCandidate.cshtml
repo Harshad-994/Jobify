@@ -1,0 +1,177 @@
+@using DAL.Data.Enums
+@using JMS_Presentation.ViewModels
+@using Shared.DTOs;
+@model List<JobCategoryViewModel>;
+
+@{
+    Layout = "_CandidateLayout";
+    ViewData["Title"] = "Job Categories";
+}
+
+<h2 class="primaryText mb-3">All Categories</h2>
+
+<div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+    <div>
+        <label class="small" for="">Search categories</label>
+        <div class="position-relative">
+            <input class="form-control searchInput" type="text" id="searchCategory" placeholder="Search" />
+            <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-2 dashboardCards categoriesCards">
+    @if (Model.Count == 0)
+    {
+        <div class="primaryText text-center fs-5 secondaryText">No job categories found.</div>
+    }
+
+    @foreach (JobCategoryViewModel category in Model)
+    {
+        <div class="col-lg-3 mb-4">
+            <div class="card text-start">
+                <div class="card-body p-4">
+                    <div class="metric-icon mb-2 mx-0">
+                        <i class="fa-solid fa-shapes"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">@category.Name</h5>
+                    <p class="text-muted small mb-2">@category.Description</p>
+                    <div class="">
+                        <a class="btn primaryBtn"
+                            href="@Url.Action("JobPostings", "JobPosting", new JobPostingFilterDto { CategoryId = category.Id })">View
+                            Jobs</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@if (Model.Count > 0)
+{
+    <div class="" id="categoriesPagination">
+        @await Html.PartialAsync("_Pagination")
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            var currentPage = 1;
+            var pageSize = $('#categoriesPagination .pageSize').val() || 5;
+            var totalPages = 1;
+            var totalCount = 0;
+            var searchText = "";
+
+            function renderCategories(renderMarkup = true) {
+                var filter = {
+                    page: currentPage,
+                    pageSize: pageSize,
+                    SearchText: searchText
+                };
+                $.ajax({
+                    url: '@Url.Action("GetAllCategories", "JobCategory")' + "?" + $.param(filter),
+                    type: 'GET',
+                    success: function (res) {
+                        totalCount = res?.totalCount;
+                        totalPages = res?.totalPages;
+                        currentPage = res?.page;
+                        updatePagination();
+                        if (!renderMarkup) {
+                            return;
+                        }
+                        var categories = res?.items;
+                        var tableBody = $('.categoriesCards');
+                        tableBody.empty();
+                        if (totalCount == 0) {
+                            tableBody.append("<div class='primaryText text-center fs-5 secondaryText'>No job categories found.</div>");
+                            $(".pagination").addClass("d-none");
+                        }
+                        else {
+                            $(".pagination").removeClass("d-none");
+                        }
+                        categories.forEach(category => {
+                            tableBody.append(getCategoryMarkup(category));
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            }
+
+            renderCategories(false);
+
+            $(document).on('click', '#deleteCategoryModal .confirmDelete', function () {
+                var categoryId = $(this).attr('categoryId');
+                $.ajax({
+                    url: '@Url.Action("DeleteCategory", "JobCategory")',
+                    type: 'POST',
+                    data: { categoryId: categoryId },
+                    success: function (response) {
+                        if (response?.success) {
+                            successToast(response?.message);
+                            if ($("#categoryTable tbody").find("tr").length == 1 && currentPage > 1) {
+                                currentPage--;
+                            }
+                            renderCategories();
+                            $("#deleteCategoryModal").modal("hide");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            });
+
+            function updatePagination() {
+                $('#categoriesPagination .pagination .stats').text(`Showing ${totalCount != 0 ? ((currentPage - 1) * pageSize) + 1 : 0}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`);
+                $('#categoriesPagination .pageSize').val(pageSize);
+
+                // Enable/disable pagination buttons
+                $('#categoriesPagination .prev-page').prop('disabled', currentPage === 1);
+                $('#categoriesPagination .next-page').prop('disabled', currentPage === totalPages);
+            }
+
+            //to go on previous page
+            $('#categoriesPagination .prev-page').click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderCategories()
+                }
+            });
+
+            //to go on next page
+            $('#categoriesPagination .next-page').click(function () {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderCategories();
+                }
+            });
+
+            //changing the value of the pagesize on changing of the drop down
+            $(document).on('change', '#categoriesPagination .pageSize', function () {
+                pageSize = $(this).val();
+                currentPage = 1;
+                renderCategories();
+            });
+
+            //searching the category
+            $('#searchCategory').on('input', debounce(function () {
+                searchText = $(this).val();
+                currentPage = 1;
+                renderCategories();
+            }));
+
+            //function to return category markup
+            function getCategoryMarkup(category) {
+                var markup = ``;
+                markup += `<div class="col-lg-3 mb-4" data-id="${category.id}"><div class="card text-start"><div class="card-body p-4"><div class="metric-icon mb-2 mx-0"><i class="fa-solid fa-shapes"></i></div><h5 class="fw-bold mb-2">${category.name}</h5><p class="text-muted small mb-2">${category.description}</p><div class=""><a class="btn primaryBtn" href="${`/JobPosting/JobPostings?CategoryId=${category.id}&Page=1&PageSize=5`}">View Jobs</a></div></div></div></div>`;
+                return markup;
+            }
+
+        });
+    </script>
+}

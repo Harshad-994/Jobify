@@ -100,7 +100,7 @@ public class ErrorHandlingMiddleware
                 response = new ErrorResponse
                 {
                     Success = false,
-                    Message = "Current password is incorrect. Please try again.",
+                    Message = "Your password is incorrect.",
                     ErrorCode = ex.ErrorCode,
                     StatusCode = (int)HttpStatusCode.BadRequest
                 };
@@ -155,7 +155,7 @@ public class ErrorHandlingMiddleware
                 response = new ErrorResponse
                 {
                     Success = false,
-                    Message = "Invalid file type. Please upload a PDF file only.",
+                    Message = "Please upload a PDF file only.",
                     ErrorCode = ex.ErrorCode,
                     StatusCode = (int)HttpStatusCode.BadRequest
                 };
@@ -438,6 +438,17 @@ public class ErrorHandlingMiddleware
                 };
                 break;
 
+            case DecryptionFailedException ex:
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                response = new ErrorResponse
+                {
+                    Success = false,
+                    Message = "Error occured with the decryption.",
+                    ErrorCode = ex.ErrorCode,
+                    StatusCode = (int)HttpStatusCode.InternalServerError
+                };
+                break;
+
             case KeyDerivationException ex:
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 response = new ErrorResponse
@@ -479,6 +490,17 @@ public class ErrorHandlingMiddleware
                     Message = "Password processing error. Please try again.",
                     ErrorCode = ex.ErrorCode ?? "PASSWORD_ENCRYPTION_ERROR",
                     StatusCode = (int)HttpStatusCode.InternalServerError
+                };
+                break;
+
+            case NotificationNotFoundException ex:
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                response = new ErrorResponse
+                {
+                    Success = false,
+                    Message = "Notification not found. Please check your request.",
+                    ErrorCode = ex.ErrorCode ?? "NOTIFICATION_NOT_FOUND",
+                    StatusCode = (int)HttpStatusCode.NotFound
                 };
                 break;
 

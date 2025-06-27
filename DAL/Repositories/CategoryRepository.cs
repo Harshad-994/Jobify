@@ -19,11 +19,11 @@ public class CategoryRepository : GenericRepository<JobCategory>, ICategoryRepos
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new Exception("Category name cannot be null or empty.");
+                throw new ApplicationException("Category name cannot be null or empty.");
             }
             return await _context.JobCategories.AnyAsync(c => c.Name.ToLower().Trim() == name.ToLower().Trim() && (id == null || c.Id != id));
         }
-        catch (Exception)
+        catch (ApplicationException)
         {
             throw;
         }
@@ -33,10 +33,10 @@ public class CategoryRepository : GenericRepository<JobCategory>, ICategoryRepos
     {
         try
         {
-            var category = await _context.JobCategories.Include(j => j.JobPostings).FirstOrDefaultAsync(c => c.Id == categoryId) ?? throw new Exception("Category not found.");
+            var category = await _context.JobCategories.Include(j => j.JobPostings).FirstOrDefaultAsync(c => c.Id == categoryId) ?? throw new ApplicationException("Category not found.");
             return category.JobPostings.Any(j => j.IsActive == true);
         }
-        catch (Exception)
+        catch (ApplicationException)
         {
             throw;
         }

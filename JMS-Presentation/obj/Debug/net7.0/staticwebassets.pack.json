@@ -49,6 +49,10 @@
       "PackagePath": "staticwebassets\\js\\vendor\\Toastify.js"
     },
     {
+      "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\js\\vendor\\signalr.js",
+      "PackagePath": "staticwebassets\\js\\vendor\\signalr.js"
+    },
+    {
       "Id": "D:\\Job-Management-System\\JMS-Presentation\\wwwroot\\lib\\bootstrap\\LICENSE",
       "PackagePath": "staticwebassets\\lib\\bootstrap"
     },

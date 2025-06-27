@@ -136,10 +136,6 @@
 
             document.title = document.title + " - " + `@ViewData["Title"]`;
 
-            if (Boolean(`@TempData["FromLogin"]`.toString())) {
-                successToast("You have successfully logged in.");
-            }
-
         });
     </script>
 }

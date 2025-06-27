@@ -1,0 +1,176 @@
+@using DAL.Data.Enums
+@using JMS_Presentation.ViewModels
+@model List<JobPostingViewModel>;
+
+@{
+    Layout = "_CandidateLayout";
+    ViewData["Title"] = "Jobs";
+}
+
+<h2 class="primaryText mb-3">Available Jobs</h2>
+
+<div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+    <div>
+        <label class="small" for="">Search jobs</label>
+        <div class="position-relative">
+            <input class="form-control searchInput" type="text" id="searchJobs" placeholder="Search" />
+            <i class="fa-solid fa-magnifying-glass position-absolute end-0 top-0 pt-2 pe-2 fs-5"></i>
+        </div>
+    </div>
+    <div>
+        <label class="small" for="">Select Job Category</label>
+        <select class="form-select w-auto" id="categoryDropdown" asp-items="@ViewBag.Categories">
+            <option selected value="@null">All</option>
+        </select>
+    </div>
+</div>
+
+<div class="row mb-2 dashboardCards jobsCards">
+    @if (Model.Count == 0)
+    {
+        <div class="primaryText text-center fs-5 secondaryText">No jobs found.</div>
+    }
+
+    @foreach (JobPostingViewModel job in Model)
+    {
+        <div class="col-lg-3 mb-4 jobCard" data-id="@job.Id">
+            <div class="card text-start">
+                <div class="card-body p-4">
+                    <div class="metric-icon mb-3 mx-0">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <h6 class="text-muted mb-2 d-flex align-items-center gap-2"><i
+                            class="fa-regular fa-clock primaryText fs-5"></i><span>@job.ClosingDate.ToString("dd-MM-yyyy")</span>
+                    </h6>
+                    <h5 class="fw-bold mb-2">@job.Title</h5>
+                    <p class="text-muted small mb-2">@job.Description</p>
+                    <div class="">
+                        <a class="btn primaryBtn viewJobDetailsBtn"
+                            href="@Url.Action("JobPostingDetails", "JobPosting", new { jobId = job.Id })">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+@if (Model.Count > 0)
+{
+    <div class="" id="jobPostingPagination">
+        @await Html.PartialAsync("_Pagination")
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            var currentPage = 1;
+            var pageSize = $('#jobPostingPagination .pageSize').val() || 5;
+            var totalPages = 1;
+            var totalCount = 0;
+            var searchText = "";
+            var CategoryId = `@ViewBag.CategoryId`;
+
+            //selecting the category from dropdown based on viewbag data
+            if (CategoryId != null) {
+                $('#categoryDropdown').val(CategoryId);
+            }
+
+            function renderJobPostings(renderMarkup = true) {
+                var filter = {
+                    page: currentPage,
+                    pageSize: pageSize,
+                    SearchText: searchText,
+                    CategoryId: CategoryId,
+                    ClosingDateEnd: `@DateTime.UtcNow`
+                };
+                $.ajax({
+                    url: '@Url.Action("GetAllJobPostings", "JobPosting")' + "?" + $.param(filter),
+                    type: 'GET',
+                    success: function (res) {
+                        totalCount = res?.totalCount;
+                        totalPages = res?.totalPages;
+                        currentPage = res?.page;
+                        updatePagination();
+                        if (!renderMarkup) {
+                            return;
+                        }
+                        var jobs = res?.items;
+                        var tableBody = $('.jobsCards');
+                        tableBody.empty();
+                        if (totalCount == 0) {
+                            tableBody.append("<div class='primaryText text-center fs-5 secondaryText'>No jobs found.</div>");
+                            $(".pagination").addClass("d-none");
+                        }
+                        else {
+                            $(".pagination").removeClass("d-none");
+                        }
+                        jobs.forEach(job => {
+                            var row = `<div class="col-lg-3 mb-4" data-id="${job.id}"><div class="card text-start"><div class="card-body p-4"><div class="metric-icon mb-3 mx-0"><i class="fas fa-briefcase"></i></div><h6 class="text-muted mb-2 d-flex align-items-center gap-2"><i class="fa-regular fa-clock primaryText fs-5"></i><span>${formatDateOnly(job.closingDate)}</span></h6><h5 class="fw-bold mb-2">${job.title}</h5><p class="text-muted small mb-2">${job.description}</p><div class=""><a class="btn primaryBtn viewJobDetailsBtn" href="${`/JobPosting/JobPostingDetails?jobId=${job.id}`}">View Details</a></div></div></div></div>`;
+                            tableBody.append(row);
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        var errorObj = JSON.parse(xhr.responseText);
+                        errorToast(errorObj.message);
+                    }
+                });
+            }
+
+            renderJobPostings(true);
+
+            function updatePagination() {
+                $('#jobPostingPagination .pagination .stats').text(`Showing ${totalCount != 0 ? ((currentPage - 1) * pageSize) + 1 : 0}-${Math.min(currentPage * pageSize, totalCount)} of ${totalCount}`);
+                $('#jobPostingPagination .pageSize').val(pageSize);
+
+                // Enable/disable pagination buttons
+                $('#jobPostingPagination .prev-page').prop('disabled', currentPage === 1);
+                $('#jobPostingPagination .next-page').prop('disabled', currentPage === totalPages);
+            }
+
+            //to go on previous page
+            $('#jobPostingPagination .prev-page').click(function () {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderJobPostings()
+                }
+            });
+
+            //to go on next page
+            $('#jobPostingPagination .next-page').click(function () {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderJobPostings();
+                }
+            });
+
+            //changing the value of the pagesize on changing of the drop down
+            $(document).on('change', '#jobPostingPagination .pageSize', function () {
+                pageSize = $(this).val();
+                currentPage = 1;
+                renderJobPostings();
+            });
+
+            //searching the category
+            $('#searchJobs').on('input', debounce(function () {
+                searchText = $(this).val();
+                currentPage = 1;
+                renderJobPostings();
+            }));
+
+            //getting detail of job posting
+            $(document).on('click', '.jobsCards .viewJobDetailsBtn', function () {
+                var jobId = $(this).closest('.jobCard').data('id');
+                window.location.href = `/JobPosting/JobPostingDetails?jobId=${jobId}`;
+            });
+
+            //filtering the jobs
+            $('#categoryDropdown').on('change', function () {
+                CategoryId = $(this).val();
+                currentPage = 1;
+                renderJobPostings();
+            });
+
+        });
+    </script>
+}

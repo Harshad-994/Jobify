@@ -117,3 +117,6 @@ D:\Job-Management-System\JMS-Presentation\obj\Debug\net7.0\JMS-Presentation.cspr
 D:\Job-Management-System\JMS-Presentation\bin\Debug\net7.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 D:\Job-Management-System\JMS-Presentation\bin\Debug\net7.0\Shared.dll
 D:\Job-Management-System\JMS-Presentation\bin\Debug\net7.0\Shared.pdb
+D:\Job-Management-System\JMS-Presentation\bin\Debug\net7.0\System.IO.Pipelines.dll
+D:\Job-Management-System\JMS-Presentation\bin\Debug\net7.0\System.Net.WebSockets.WebSocketProtocol.dll
+D:\Job-Management-System\JMS-Presentation\bin\Debug\net7.0\System.Threading.Channels.dll

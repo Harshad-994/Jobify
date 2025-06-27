@@ -1,0 +1,24 @@
+@using JMS_Presentation.ViewModels
+@model JobApplicationViewModel;
+
+<form method="post" id="applyJobForm">
+    <input hidden asp-for="JobPostingId">
+    <div class="modal-header">
+        <h5 class="modal-title">Application Form</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <div class="mb-3">
+            <p class="primaryText fw500 mb-1 fs-5">Resume</p>
+            <a class="secondaryText" href="@Model.ResumeUrl" target="_blank">Your Resume</a>
+        </div>
+        <div>
+            <p class="primaryText fw500 mb-1 fs-5">Cover Letter</p>
+            <textarea asp-for="CoverLetter" class="form-control secondaryText" rows="5"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn secondaryBtn" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn primaryBtn confirmApply">Submit Application</button>
+    </div>
+</form>

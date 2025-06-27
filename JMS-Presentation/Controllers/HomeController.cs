@@ -4,6 +4,7 @@ using JMS_Presentation.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
+using Shared.Models;
 
 namespace JMS_Presentation.Controllers;
 
@@ -26,6 +27,7 @@ public class HomeController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> AdminDashboardAsync()
     {
         var dashboardStats = await _dashboardService.GetAdminDashboardStats();
@@ -47,6 +49,7 @@ public class HomeController : Controller
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> AdminProfile(Guid userId)
     {
         var user = await _candidateService.GetAdminProfile(userId);
@@ -61,6 +64,7 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Admin))]
     public async Task<IActionResult> UpdateAdminProfile(AdminProfileViewModel model)
     {
         if (!ModelState.IsValid)
@@ -80,10 +84,11 @@ public class HomeController : Controller
 
         Response.Cookies.Append("jwt", newJwt, cookieOptions);
 
-        return Ok(new { Success = true, Message = "Profile updated successfully." });
+        return Ok(new SuccessResponce { Success = true, Message = "Profile updated successfully." });
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Candidate))]
     public async Task<IActionResult> UpdateCandidateProfile(CandidateProfileViewModel model)
     {
         if (!ModelState.IsValid)
@@ -109,20 +114,20 @@ public class HomeController : Controller
         };
 
         Response.Cookies.Append("jwt", newJwt, cookieOptions);
-        return Ok(new { Success = true, Message = "Profile updated successfully." });
+        return Ok(new SuccessResponce { Success = true, Message = "Profile updated successfully." });
     }
 
     [HttpGet]
+    [Authorize(Roles = nameof(Role.Candidate))]
     public async Task<IActionResult> CandidateDashboard()
     {
-        var userId = User.FindFirst("UserId")?.Value;
-
-        if (userId == null)
+        var userId = User.GetUserId();
+        if (Guid.Empty == userId)
         {
             return RedirectToAction("Login");
         }
 
-        var candidateDashboardStatsDto = await _dashboardService.GetCandidateDashboardStats(Guid.Parse(userId));
+        var candidateDashboardStatsDto = await _dashboardService.GetCandidateDashboardStats(userId);
         var viewModel = new CandidateDashboardViewModel
         {
             TotalNoOfActiveJobs = candidateDashboardStatsDto.TotalNoOfActiveJobs,
@@ -132,8 +137,15 @@ public class HomeController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> CandidateProfile(Guid userId)
+    [Authorize(Roles = nameof(Role.Candidate))]
+    public async Task<IActionResult> CandidateProfile()
     {
+        var userId = User.GetUserId();
+        if (Guid.Empty == userId)
+        {
+            return RedirectToAction("Login");
+        }
+
         var user = await _candidateService.GetCandidateProfile(userId);
         var viewModel = new CandidateProfileViewModel
         {

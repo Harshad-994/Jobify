@@ -19,11 +19,11 @@ public class CandidateRepository : GenericRepository<User>, ICandidateRepository
         {
             if (string.IsNullOrWhiteSpace(email))
             {
-                throw new Exception("Email cannot be null or empty.");
+                throw new ApplicationException("Email cannot be null or empty.");
             }
             return await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
         }
-        catch (Exception)
+        catch (ApplicationException)
         {
             throw;
         }

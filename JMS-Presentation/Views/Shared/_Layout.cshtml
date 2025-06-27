@@ -26,10 +26,17 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/vendor/Toastify.js"></script>
+    <script>
+        $(document).ready(function () {
+            if (`@TempData["SuccessMessage"]`) {
+                successToast(`@TempData["SuccessMessage"]`);
+            }
+        });
+    </script>
 
     <script src="https://kit.fontawesome.com/9c4a1646d2.js" crossorigin="anonymous"></script>
     @await RenderSectionAsync("Scripts", required: false)
-    
+
 </body>
 
 </html>

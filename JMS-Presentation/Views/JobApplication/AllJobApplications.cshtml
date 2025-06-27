@@ -52,7 +52,7 @@
     </div>
 </div>
 
-@* modal for updating the application status*@
+@* modal for application details*@
 <div class="modal fade" id="applicationInfoModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -128,7 +128,7 @@
                         </td>
                         <td>
                             <button data-bs-target="#updateApplicationStatusModal" data-bs-toggle="modal"
-                                class="btn secondaryBtn changeApplicationStatusBtn">Update Status</button>
+                                class="btn primaryBtn rounded-pill changeApplicationStatusBtn">Update Status</button>
                         </td>
                         <td>
                             <div class="d-flex align-items-center gap-3 actions p-1">
@@ -209,7 +209,7 @@
                                                                                                                                                                                             ${application.jobApplicationStatusName}
                                                                                                                                                                                             </td>
                                                                                                                                                                                             <td>
-                                                                                                                                                                                            <button data-bs-target="#updateApplicationStatusModal" data-bs-toggle="modal" class="btn secondaryBtn changeApplicationStatusBtn" >Update Status</button>
+                                                                                                                                                                                            <button data-bs-target="#updateApplicationStatusModal" data-bs-toggle="modal" class="btn primaryBtn rounded-pill changeApplicationStatusBtn" >Update Status</button>
                                                                                                                                                                                             </td>
                                                                                                                                                                                             <td>
                                                                                                                                                                                             <div class="d-flex align-items-center gap-3 actions p-1">
@@ -307,7 +307,7 @@
                 applicationStatus = $(this).val();
                 currentPage = 1;
                 renderApplications();
-            })
+            });
 
             //to change application status
             $(document).on('click', '.changeApplicationStatusBtn', function () {

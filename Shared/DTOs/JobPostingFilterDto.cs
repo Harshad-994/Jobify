@@ -10,5 +10,6 @@ public class JobPostingFilterDto : PaginationRequestDto
     public int? EmploymentType { get; set; }
     public string? SalaryRange { get; set; }
     public DateTime? ClosingDate { get; set; }
+    public DateTime? ClosingDateEnd { get; set; }
     public bool? IsActive { get; set; }
 }
