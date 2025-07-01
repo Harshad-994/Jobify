@@ -179,11 +179,11 @@ public class JobService : IJobService
         {
             var term = filter.SearchText.ToLower().Trim();
             query = query.Where(j =>
-                j.SalaryRange.ToLower().Contains(term) ||
-                j.Title.ToLower().Contains(term) ||
-                j.Description.ToLower().Contains(term) ||
-                j.CompanyName.ToLower().Contains(term) ||
-                j.Location.ToLower().Contains(term));
+                EF.Functions.ILike(j.SalaryRange, $"%{term}%") ||
+                EF.Functions.ILike(j.Title, $"%{term}%") ||
+                EF.Functions.ILike(j.Description, $"%{term}%") ||
+                EF.Functions.ILike(j.CompanyName, $"%{term}%") ||
+                EF.Functions.ILike(j.Location, $"%{term}%"));
         }
 
         if (filter.CategoryId != null)
@@ -198,7 +198,6 @@ public class JobService : IJobService
         var totalCount = await query.CountAsync();
 
         var items = await query
-            .Include(j => j.JobCategory)
             .OrderByDescending(j => j.CreatedAt)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)

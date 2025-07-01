@@ -106,7 +106,9 @@ public class CategoryService : ICategoryService
         if (!string.IsNullOrWhiteSpace(filter.SearchText))
         {
             var term = filter.SearchText.ToLower().Trim();
-            query = query.Where(c => c.Name.ToLower().Contains(term) || c.Description.ToLower().Contains(term));
+            query = query.Where(c =>
+            EF.Functions.ILike(c.Name, $"%{term}%") ||
+            EF.Functions.ILike(c.Description, $"%{term}%"));
         }
 
         var totalCount = await query.CountAsync();
@@ -122,7 +124,7 @@ public class CategoryService : ICategoryService
                 Description = c.Description,
                 CreatedAt = c.CreatedAt,
                 UpdatedAt = c.UpdatedAt,
-                TotalNoOfJobs = _jobRepository.GetAll().Where(j => j.CategoryId == c.Id).Count(),
+                TotalNoOfJobs = c.JobPostings.Count(),
             })
             .ToListAsync();
 
@@ -140,20 +142,23 @@ public class CategoryService : ICategoryService
 
     public async Task<JobCategoryDto> GetByIdAsync(Guid categoryId)
     {
-        var category = await _categoryRepository.GetByIdAsync(categoryId);
+        var category = await _categoryRepository.GetAll().Where(c => c.Id == categoryId).
+        Select(c => new JobCategoryDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Description = c.Description,
+            CreatedAt = c.CreatedAt,
+            UpdatedAt = c.UpdatedAt,
+            TotalNoOfJobs = c.JobPostings.Count(),
+        }).SingleOrDefaultAsync();
+
         if (category == null)
         {
             _logger.LogWarning("Category with id {categoryId} not found.", categoryId);
             throw new JobCategoryNotFoundException(categoryId);
         }
-        return new JobCategoryDto
-        {
-            Id = category.Id,
-            Name = category.Name,
-            Description = category.Description,
-            CreatedAt = category.CreatedAt,
-            UpdatedAt = category.UpdatedAt,
-            TotalNoOfJobs = _jobRepository.GetAll().Where(j => j.CategoryId == category.Id).Count(),
-        };
+
+        return category;
     }
 }

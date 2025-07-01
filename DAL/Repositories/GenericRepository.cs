@@ -54,7 +54,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         try
         {
-            return table.AsQueryable();
+            return table.AsNoTracking().AsQueryable();
         }
         catch (Exception)
         {

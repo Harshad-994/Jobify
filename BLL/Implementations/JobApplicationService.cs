@@ -81,21 +81,23 @@ public class JobApplicationService : IJobApplicationService
             _logger.LogWarning("Candidate with id {CandidateId} not found.", candidateId);
             throw new CandidateNotFoundException(candidateId);
         }
+        var jobApplicationDtos = await _jobApplicationRepository.GetAll()
+                .Where(j => j.UserId == candidateId)
+                .Select(j => new JobApplicationDto
+                {
+                    Id = j.Id,
+                    Title = j.JobPosting.Title,
+                    UserId = j.UserId,
+                    JobPostingId = j.JobPostingId,
+                    CoverLetter = j.CoverLetter,
+                    AppliedAt = j.AppliedAt,
+                    UpdatedAt = j.UpdatedAt,
+                    ApplicationStatus = j.ApplicationStatus,
+                    CompanyName = j.JobPosting.CompanyName,
+                    JobApplicationStatusName = ((ApplicationStatus)j.ApplicationStatus).ToString()
+                })
+                .ToListAsync();
 
-        var jobApplications = await _jobApplicationRepository.GetAll().Include(j => j.JobPosting).Where(j => j.UserId == candidateId).ToListAsync();
-        var jobApplicationDtos = jobApplications.Select(j => new JobApplicationDto
-        {
-            Id = j.Id,
-            Title = j.JobPosting.Title,
-            UserId = j.UserId,
-            JobPostingId = j.JobPostingId,
-            CoverLetter = j.CoverLetter,
-            AppliedAt = j.AppliedAt,
-            UpdatedAt = j.UpdatedAt,
-            ApplicationStatus = j.ApplicationStatus,
-            CompanyName = j.JobPosting.CompanyName,
-            JobApplicationStatusName = ((ApplicationStatus)j.ApplicationStatus).ToString()
-        }).ToList();
         return jobApplicationDtos;
     }
 
@@ -153,10 +155,10 @@ public class JobApplicationService : IJobApplicationService
         {
             var term = filter.SearchText.ToLower().Trim();
             query = query.Where(j =>
-                j.User.FirstName.ToLower().Contains(term)
-                || j.User.LastName.ToLower().Contains(term)
-                || (j.User.FirstName.ToLower() + " " + j.User.LastName.ToLower()).Contains(term)
-                || j.JobPosting.Title.ToLower().Contains(term));
+                EF.Functions.ILike(j.User.FirstName, $"%{term}%")
+                || EF.Functions.ILike(j.User.LastName, $"%{term}%")
+                || EF.Functions.ILike(j.User.FirstName + " " + j.User.LastName, $"%{term}%")
+                || EF.Functions.ILike(j.JobPosting.Title, $"%{term}%"));
         }
 
         if (filter.JobPostingId != null)
@@ -169,8 +171,6 @@ public class JobApplicationService : IJobApplicationService
         var totalCount = await query.CountAsync();
 
         var items = await query
-            .Include(a => a.User)
-            .Include(a => a.JobPosting)
             .OrderByDescending(a => a.AppliedAt)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)

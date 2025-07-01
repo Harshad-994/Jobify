@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BLL.Interfaces;
 using DAL.Data.Models;
 using DAL.Interfaces;
@@ -43,15 +44,14 @@ public class NotificationService : INotificationService
         return addedNotificationDto;
     }
 
-    public List<NotificationDto> GetUnreadNotifications(Guid userId)
+    public async Task<List<NotificationDto>> GetUnreadNotifications(Guid userId)
     {
         if (Guid.Empty == userId)
         {
             _logger.LogWarning("UserId cannot be null.");
             throw new ArgumentNullException(nameof(userId));
         }
-        var notifications = _notificationRepository.GetAll().Where(n => n.UserId == userId && n.IsRead == false);
-        return notifications.Select(n => new NotificationDto
+        var notifications = await _notificationRepository.GetAll().Where(n => n.UserId == userId && n.IsRead == false).Select(n => new NotificationDto
         {
             Id = n.Id,
             Title = n.Title,
@@ -59,7 +59,9 @@ public class NotificationService : INotificationService
             IsRead = n.IsRead,
             CreatedAt = n.CreatedAt,
             ReadAt = n.ReadAt,
-        }).ToList();
+        }).ToListAsync();
+
+        return notifications;
     }
 
     public async Task<NotificationDto> MarkNotificationAsReadAsync(Guid notificationId)

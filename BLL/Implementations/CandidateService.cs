@@ -40,7 +40,7 @@ public class CandidateService : ICandidateService
             Email = candidateEntity.Email,
             Role = candidateEntity.Role,
             IsActive = candidateEntity.IsActive,
-            ResumeUrl = !string.IsNullOrEmpty(candidateEntity.ResumeUrl) ? _passwordEncryptionService.DecryptAsync(candidateEntity.ResumeUrl).Result : null,
+            ResumeUrl = !string.IsNullOrEmpty(candidateEntity.ResumeUrl) ? await _passwordEncryptionService.DecryptAsync(candidateEntity.ResumeUrl) : null,
             UpdatedAt = candidateEntity.UpdatedAt,
             JobApplications = _jobApplicationService.GetAllApplicationsOfCandidateAsync(candidateEntity.Id).Result
 
@@ -58,7 +58,6 @@ public class CandidateService : ICandidateService
         }
         var adminProfileDto = new AdminProfileDto
         {
-
             Id = user.Id,
             FirstName = user.FirstName,
             LastName = user.LastName,
@@ -134,20 +133,27 @@ public class CandidateService : ICandidateService
         {
             var term = filter.SearchText.ToLower().Trim();
             query = query.Where(c =>
-            c.FirstName.ToLower().Contains(term) ||
-            c.LastName.ToLower().Contains(term) ||
-            c.Email.ToLower().Contains(term) ||
-            (c.FirstName.ToLower() + " " + c.LastName.ToLower()).Contains(term)
+            EF.Functions.ILike(c.FirstName, $"%{term}%") ||
+            EF.Functions.ILike(c.LastName, $"%{term}%") ||
+            EF.Functions.ILike(c.Email, $"%{term}%") ||
+            EF.Functions.ILike(c.FirstName + " " + c.LastName, $"%{term}%")
             );
         }
 
-
-        var items = query
+        var candidateEntities = await query
             .OrderBy(c => c.Id)
             .Where(c => c.Role == (int)Role.Candidate)
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
-            .Select(c => new CandidateProfileDto
+            .ToListAsync();
+
+        var totalCount = query.Count();
+
+        var candidateDtos = new List<CandidateProfileDto>();
+
+        foreach (var c in candidateEntities)
+        {
+            candidateDtos.Add(new CandidateProfileDto
             {
                 Id = c.Id,
                 FirstName = c.FirstName,
@@ -155,16 +161,16 @@ public class CandidateService : ICandidateService
                 Email = c.Email,
                 Role = c.Role,
                 IsActive = c.IsActive,
-                ResumeUrl = !string.IsNullOrEmpty(c.ResumeUrl) ? _passwordEncryptionService.DecryptAsync(c.ResumeUrl).Result : null,
+                ResumeUrl = !string.IsNullOrEmpty(c.ResumeUrl) ? await _passwordEncryptionService.DecryptAsync(c.ResumeUrl) : null,
                 UpdatedAt = c.UpdatedAt,
                 CreatedAt = c.CreatedAt
             });
+        }
 
-        var totalCount = await items.CountAsync();
 
         return new PaginationResponseDto<CandidateProfileDto>
         {
-            Items = items,
+            Items = candidateDtos,
             TotalCount = totalCount,
             Page = filter.Page,
             PageSize = filter.PageSize

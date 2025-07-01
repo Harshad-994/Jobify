@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using BLL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -17,7 +16,7 @@ public class NotificationController : Controller
     }
 
     [HttpGet]
-    public List<NotificationDto> GetUnreadNotifications()
+    public async Task<List<NotificationDto>> GetUnreadNotifications()
     {
         var userId = User.GetUserId();
         if (Guid.Empty == userId)
@@ -25,7 +24,7 @@ public class NotificationController : Controller
             return new List<NotificationDto> { };
         }
 
-        var unreadNotifications = _notificationService.GetUnreadNotifications(userId);
+        var unreadNotifications = await _notificationService.GetUnreadNotifications(userId);
         return unreadNotifications;
     }
 
